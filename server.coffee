@@ -3,6 +3,9 @@ Snapshot = require './snapshot.coffee'
 rpc = require 'axon-rpc'
 axon = require 'axon'
 rep = axon.socket 'rep'
+express = require 'express'
+
+server = new rpc.Server(rep)
 
 server.expose 'build', (opts, callback) ->
 	buildDeferred = dfd()
@@ -11,9 +14,20 @@ server.expose 'build', (opts, callback) ->
 	.then(Snapshot.build_and_test)
 	.always(callback)
 
+rep.bind(config.RPCPort)
+
+answerBackServer = express()
+
+answerBackServer.get '/answerback/:id', (req, res) ->
+	Snapshot.notify req.params.id
+	res.end(200)
+
+
+
 
 
 #TODO: Get an answer back from Circadio... somehow...
+
 
 
 

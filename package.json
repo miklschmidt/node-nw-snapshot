@@ -6,12 +6,14 @@
     "email": "mikkel.schmidt@gmail.com"
   },
   "scripts": {
-  	"start": "node index.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "coffee-script": "~1.6.0",
     "axon": "~1.0.0",
     "axon-rpc": "=0.0.2",
-    "jquery-deferred": "~0.3.0"
+    "jquery-deferred": "~0.3.0",
+    "mkdirp": "~0.3.5",
+    "rimraf": "~2.2.6"
   }
 }
