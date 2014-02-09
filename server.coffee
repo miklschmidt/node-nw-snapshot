@@ -1,29 +1,30 @@
 config = require './config.coffee'
 Snapshot = require './snapshot.coffee'
-rpc = require 'axon-rpc'
-axon = require 'axon'
-rep = axon.socket 'rep'
+sock = require './axon-pubsub'
 express = require 'express'
+sock.subscribe('build')
 
-server = new rpc.Server(rep)
-
-server.expose 'build', (opts, callback) ->
+sock.on 'message', (opts) ->
 	buildDeferred = dfd()
-	Snapshot.config(opts)
+	Snapshot.config(opts, sock)
 	Snapshot.prepare()
 	.then(Snapshot.build_and_test)
-	.always(callback)
+	.progress((status, tries) ->
+		sock.send 'progress', status, tries
+	).fail((err, tries) ->
+		sock.send 'fail', tries
+	).done (snapshot, tries) ->
+		sock.send 'success', snapshot, tries
 
-rep.bind(config.RPCPort)
+sock.bind(config.sockPort)
 
 answerBackServer = express()
 
-answerBackServer.get '/answerback/:id', (req, res) ->
+answerBackServer.get '/callback/:id', (req, res) ->
 	Snapshot.notify req.params.id
 	res.end(200)
 
-
-
+answerBackServer.listen(config.answerPort)
 
 
 #TODO: Get an answer back from Circadio... somehow...

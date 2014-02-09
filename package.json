@@ -14,6 +14,8 @@
     "axon-rpc": "=0.0.2",
     "jquery-deferred": "~0.3.0",
     "mkdirp": "~0.3.5",
-    "rimraf": "~2.2.6"
+    "rimraf": "~2.2.6",
+    "debug": "~0.7.4",
+    "escape-regexp": "0.0.1"
   }
 }
