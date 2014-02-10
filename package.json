@@ -11,11 +11,12 @@
   "dependencies": {
     "coffee-script": "~1.6.0",
     "axon": "~1.0.0",
-    "axon-rpc": "=0.0.2",
     "jquery-deferred": "~0.3.0",
     "mkdirp": "~0.3.5",
     "rimraf": "~2.2.6",
     "debug": "~0.7.4",
-    "escape-regexp": "0.0.1"
+    "escape-regexp": "0.0.1",
+    "request": "~2.33.0",
+    "decompress-zip": "0.0.4"
   }
 }

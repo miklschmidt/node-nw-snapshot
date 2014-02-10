@@ -4,7 +4,7 @@ if process.platform.match(/^darwin/)
 	config.sockPort = 3001
 	config.answerPort = 3301
 else if process.platform.match(/^win/) 
-	config.platform = 'windows'
+	config.platform = 'win'
 	config.sockPort = 3001
 	config.answerPort = 3301
 else 
@@ -20,5 +20,7 @@ else
 
 config.timeout = 20000 # ms before giving up and failing the test
 config.callbackURL = "http://localhost:#{config.answerPort}/callback"
+
+config.downloadURL = "https://s3.amazonaws.com/node-webkit"
 
 module.exports = config

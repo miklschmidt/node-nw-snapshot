@@ -45,7 +45,7 @@ module.exports =
 	# @return {Promise}
 	# @api public
 	###
-	config: (data, @sock, callback) ->
+	config: (data) ->
 		@configurationDeferred = dfd()
 		# Check if we're in the correct state, reject the deferred if not.
 		unless @state is STATE_READY
@@ -89,7 +89,7 @@ module.exports =
 		@downloadDeferred = dfd()
 
 		# Download the specified node-webkit distribution
-		downloadPromise = downloader.fetch @nwversion
+		downloadPromise = downloader.ensure @nwversion
 
 		downloadPromise.done (@snapshotterPath, @nwPath) =>
 			# We proxy the promise as we want to set the context, set local flags, 
@@ -215,10 +215,13 @@ module.exports =
 	# Checks if the snapshotter is in the correct state or if we need to abort.
 	# An error object can be supplied for convenience when checking in callbacks.
 	#
+	# @param {Deferred} deferred.
+	# @param {Integer} expectedState
+	# @param {Error} err 
 	# @return {Boolean}
 	# @api private
 	###
-	checkState: (deferred, expectedState, err = false) ->
+	checkState: (deferred, expectedState, err = null) ->
 		if err
 			deferred.rejectWith @, err
 			return false
@@ -243,7 +246,7 @@ module.exports =
 		@state = STATE_CLEANINGUP
 		@cleanupDeferred = dfd()
 
-		# Delete the test directory and all it's content.
+		# Delete the test directory and all its content.
 		rimraf @testdir, (err) ->
 			return if @cleanupDeferred.rejectWith @, err if err
 			@cleanupDeferred.resolveWith @ 
@@ -369,5 +372,5 @@ module.exports =
 				@launchDeferred.always @resetStateAndResolve
 				# Kill the app to speed the process along.
 				@process.kill()
-				
+
 		@abortDeferred.promise()
