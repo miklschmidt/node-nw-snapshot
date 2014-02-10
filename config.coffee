@@ -1,20 +1,24 @@
 config = {}
 if process.platform.match(/^darwin/) 
 	config.platform = 'osx'
+	config.arch = 'ia32'
 	config.sockPort = 3001
 	config.answerPort = 3301
 else if process.platform.match(/^win/) 
 	config.platform = 'win'
+	config.arch = 'ia32'
 	config.sockPort = 3001
 	config.answerPort = 3301
 else 
 	config.platform = 'linux'
 	if process.arch is 'ia32'
-	config.sockPort = 3003
-	config.answerPort = 3303
+		config.arch = 'ia32'
+		config.sockPort = 3003
+		config.answerPort = 3303
 	else if process.arch is 'x64'
-	config.sockPort = 3004
-	config.answerPort = 3304
+		config.arch = 'x64'
+		config.sockPort = 3004
+		config.answerPort = 3304
 	else
 		throw new Error("Unsupported platform architecture '#{process.arch}'")
 

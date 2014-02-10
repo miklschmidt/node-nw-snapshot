@@ -7,7 +7,9 @@ config = require './config.coffee'
 fs = require 'fs'
 dfd = require('jquery-deferred').Deferred
 rimraf = require 'rimraf'
+mkdirp = require 'mkdirp'
 DecompressZip = require 'decompress-zip'
+request = require 'request'
 
 ###
 # NodeWebkitDownloader Class definition
@@ -27,11 +29,13 @@ module.exports = class NodeWebkitDownloader
 	# @return {NodeWebkitDownloader}
 	# @api private
 	###
-	constructor: (@version, @platform = config.platform, @arch = process.arch) ->
+	constructor: (@version, @platform = config.platform, @arch = config.arch) ->
 		unless @platform in ['win', 'osx', 'linux']
 			throw new Error "Platform must be one of 'osx', 'linux' or 'win'"
 		unless @arch in ['ia32', 'x64']
 			throw new Error "Arch must be one of 'ia32' or 'x64'"
+		if @platform in ['win', 'osx'] and @arch isnt 'ia32'
+			throw new Error "Only ia32 is supported on osx and windows"
 
 	###
 	# Returns the remote URL for the node-webkit archive.
@@ -40,7 +44,8 @@ module.exports = class NodeWebkitDownloader
 	# @api public
 	###
 	getDownloadURL: () ->
-		"#{config.downloadURL}/v#{@version}/node-webkit-v#{@version}-#{@platform}-#{@arch}.zip"
+		extension = if @platform is 'linux' then 'tar.gz' else 'zip'
+		"#{config.downloadURL}/v#{@version}/node-webkit-v#{@version}-#{@platform}-#{@arch}.#{extension}"
 
 	###
 	# Returns the local path to the directory where the node-webkit 
@@ -50,7 +55,7 @@ module.exports = class NodeWebkitDownloader
 	# @api public
 	###
 	getLocalPath: () ->
-		path.join __dirname, @version, "#{@platform}-#{@arch}"
+		path.join __dirname, "bin", @version, "#{@platform}-#{@arch}"
 
 	###
 	# Returns the local path to the snapshot binary.
@@ -91,7 +96,7 @@ module.exports = class NodeWebkitDownloader
 		filename = url.split('/').slice(-1)[0]
 
 		# Error handler
-		handleError = (err) => downloadDeferred.rejectWith @, err
+		handleError = (err) => downloadDeferred.rejectWith @, [err]
 
 		# Create the directory
 		mkdirp @getLocalPath(), (err) =>
@@ -112,7 +117,7 @@ module.exports = class NodeWebkitDownloader
 
 			# Success handling
 			destinationStream.on 'close', () =>
-				downloadDeferred.resolveWith @, destinationFile
+				downloadDeferred.resolveWith @, [destinationFile]
 
 			# Pipe the request data to the local file
 			req.pipe destinationStream
@@ -129,7 +134,7 @@ module.exports = class NodeWebkitDownloader
 		cleanDeferred = dfd()
 		# Delete the directory and all its content.
 		rimraf @getLocalPath(), (err) =>
-			return cleanDeferred.rejectWith @, err
+			return cleanDeferred.rejectWith @, [err]
 			cleanDeferred.resolveWith @
 
 		cleanDeferred.promise()
@@ -140,28 +145,28 @@ module.exports = class NodeWebkitDownloader
 	# @return {Promise}
 	# @api private
 	###
-	extract: (input, output) ->
+	extract: (input, output = @getLocalPath()) ->
 		extractDeferred = dfd()
 
 		# Check that the input file exists.
 		unless fs.existsSync input
-			return extractDeferred.rejectWith @, new Error('The specified input file does not exist')
+			return extractDeferred.rejectWith @, [new Error('The specified input file does not exist')]
 
 		# Ensure that the extraction destination exists.
 		mkdirp output, (err) ->
-			return extractDeferred.rejectWith @, err if err
+			return extractDeferred.rejectWith @, [err] if err
 
 			switch @platform
 				when 'osx'
 					# Use native unzip
 					exec "unzip -o '#{input}' -d '#{output}'", (err) =>
-						return extractDeferred.rejectWith @, err if err
+						return extractDeferred.rejectWith @, [err] if err
 						extractDeferred.resolveWith @
 
 				when 'linux'
 					# Use native tar
 					exec "tar -xf '#{input}' 'output'", (err) =>
-						return extractDeferred.rejectWith @, err if err
+						return extractDeferred.rejectWith @, [err] if err
 						extractDeferred.resolveWith @
 
 				when 'win'
@@ -170,7 +175,7 @@ module.exports = class NodeWebkitDownloader
 					# extremely flaky.
 					unzip = DecompressZip input
 					unzip.on 'error', (err) =>
-						extractDeferred.rejectWith @, err
+						extractDeferred.rejectWith @, [err]
 					unzip.on 'extract', () =>
 						extractDeferred.resolveWith @
 					unzip.extract {path: output}
@@ -200,7 +205,7 @@ module.exports = class NodeWebkitDownloader
 		@versionExists = fs.existsSync(@getLocalPath())
 		# Check if the version exists and verify that the binaries are present.
 		if @versionExists and @verifyBinaries()
-			ensureDeferred.resolveWith @, @getSnapshotBin(), @getNwBin()
+			ensureDeferred.resolveWith @, [@getSnapshotBin(), @getNwBin()]
 		else
 			# Always delete the old directory, there might be something left over
 			# from a bad extraction or something.
@@ -212,10 +217,10 @@ module.exports = class NodeWebkitDownloader
 			# Check if the binaries exist and resolve/reject
 			.done () ->
 				if @verifyBinaries
-					ensureDeferred.resolveWith @, @getSnapshotBin(), @getNwBin()
+					ensureDeferred.resolveWith @, [@getSnapshotBin(), @getNwBin()]
 				else
-					ensureDeferred.rejectWith @, new Error("The expected binaries couldn't be found in the downloaded archive.")
+					ensureDeferred.rejectWith @, [new Error("The expected binaries couldn't be found in the downloaded archive.")]
 			# Something in the chain went wrong, reject the deferred.
 			.fail (err) ->
-				ensureDeferred.rejectWith @, err
+				ensureDeferred.rejectWith @, [err]
 		ensureDeferred.promise()

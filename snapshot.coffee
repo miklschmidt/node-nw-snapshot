@@ -50,14 +50,14 @@ module.exports =
 		# Check if we're in the correct state, reject the deferred if not.
 		unless @state is STATE_READY
 			err = new Error("Build currently in process, please wait for it to complete, or send the 'abort' event.")
-			@configurationDeferred.rejectWith @, err
+			@configurationDeferred.rejectWith @, [err]
 
 		@state = STATE_CONFIGURING
 
 		# Check if we recieved the data we need, reject the deferred if not.
 		unless data.nwversion and data.snapshotSource and data.appSource and data.package
 			err = new Error("Insufficient information, you must supply nwversion, snapshotSource, appSource and package.")
-			@configurationDeferred.rejectWith @, err
+			@configurationDeferred.rejectWith @, [err]
 
 		# Default iterations if none specified.
 		unless data.iterations?
@@ -102,7 +102,7 @@ module.exports =
 		downloadPromise.fail (err) =>
 			# Download didn't go well, reset the state and reject the deferred.
 			@resetState()
-			@downloadDeferred.rejectWith @, err
+			@downloadDeferred.rejectWith @, [err]
 
 		@downloadDeferred.promise()
 
@@ -133,7 +133,7 @@ module.exports =
 				# Write dist.nw
 				fs.writeFile path.join(@testdir, "dist.nw"), @appSource, (err) ->
 					return if @checkState(@makeDeferred, STATE_MAKINGTEST, err)
-					@makeDeferred.resolveWith @, @testdir
+					@makeDeferred.resolveWith @,[ @testdir]
 
 		@makeDeferred.promise()
 	
@@ -185,7 +185,7 @@ module.exports =
 		, (err) ->
 			# Notify about the failure
 			@tries++
-			@runDeferred.notifyWith @, err, @tries
+			@runDeferred.notifyWith @, [err, @tries]
 			# Delete old snapshot
 			fs.unlinkSync path.join(@testdir, path.basename(@outputFile))
 			# Try again and append the promise to the chain or fail if iterations are used up.
@@ -199,7 +199,7 @@ module.exports =
 				# Clean up the snapshot
 				@cleanupSnapshot()
 				# Resolve the deferred, we were succesful!
-				@runDeferred.resolveWith @, fileBuffer, @tries
+				@runDeferred.resolveWith @, [fileBuffer, @tries]
 				# Finally reset the state for the next job.
 				@resetState()
 
@@ -207,7 +207,7 @@ module.exports =
 			# Snapshot testing failed, clean up!
 			@cleanupTest.always () ->
 				@cleanupSnapshot()
-				@runDeferred.rejectWith @, new Error("Couldn't verify snapshot: " + err?.message), @tries
+				@runDeferred.rejectWith @, [new Error("Couldn't verify snapshot: " + err?.message), @tries]
 				@resetState()
 
 		@runDeferred.promise()
@@ -224,16 +224,16 @@ module.exports =
 	###
 	checkState: (deferred, expectedState, err = null) ->
 		if err
-			deferred.rejectWith @, err
+			deferred.rejectWith @, [err]
 			return false
 		if @state isnt expectedState
 			err = new Error("State mismatch. State was #{@state} expecting #{expectedState}.")
-			deferred.rejectWith @, err
+			deferred.rejectWith @, [err]
 			return false
 		if @abort
 			# If we need to abort we just reject the deferred so 
 			# everything will happen naturally.
-			deferred.rejectWith @, new Error('Aborted!')
+			deferred.rejectWith @, [new Error('Aborted!')]
 			return false
 		return true
 
@@ -249,7 +249,7 @@ module.exports =
 
 		# Delete the test directory and all its content.
 		rimraf @testdir, (err) ->
-			return if @cleanupDeferred.rejectWith @, err if err
+			return if @cleanupDeferred.rejectWith @, [err] if err
 			@cleanupDeferred.resolveWith @ 
 		
 		@cleanupDeferred.promise()
@@ -298,7 +298,7 @@ module.exports =
 		# Set a timeout, we don't want to wait for the application forever.
 		@execTimeout = setTimeout () ->
 			@process.kill()
-			@launchDeferred.rejectWith @, new Error("Timeout in testing after #{config.timeout}ms.")
+			@launchDeferred.rejectWith @, [new Error("Timeout in testing after #{config.timeout}ms.")]
 		, config.timeout
 
 		# When the process exits, check if we we're called back
@@ -308,7 +308,7 @@ module.exports =
 				@didNotify = false
 			else
 				clearTimeout @execTimeout
-				@launchDeferred.rejectWith @, new Error("Process exited without calling back.")
+				@launchDeferred.rejectWith @, [new Error("Process exited without calling back.")]
 
 		@launchDeferred.promise()
 
@@ -324,7 +324,7 @@ module.exports =
 			# Testing failed, clean up the snapshot so somebody doesn't 
 			# accidentally use it some where.
 			@cleanupSnapshot()
-			@testDeferred.rejectWith @, err
+			@testDeferred.rejectWith @, [err]
 		.done () ->
 			# Testing succeeded.
 			@testDeferred.resolveWith @

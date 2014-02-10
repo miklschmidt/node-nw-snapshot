@@ -6,7 +6,8 @@
     "email": "mikkel.schmidt@gmail.com"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "./node_modules/.bin/mocha --compilers coffee:coffee-script/register -R spec"
   },
   "dependencies": {
     "coffee-script": "~1.7.0",
