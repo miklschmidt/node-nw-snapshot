@@ -138,7 +138,7 @@ module.exports = class NodeWebkitDownloader
 	# Extracts the node-webkit archive.
 	#
 	# @return {Promise}
-	# @api public
+	# @api private
 	###
 	extract: (input, output) ->
 		extractDeferred = dfd()

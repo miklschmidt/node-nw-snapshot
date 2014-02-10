@@ -3,7 +3,7 @@
 ###
 
 config = require './config.coffee'
-downloader = require './nw-downloader.coffee'
+NodeWebkitDownloader = require './nw-downloader.coffee'
 path = require 'path'
 exec = require('child_process').exec
 dfd = require('jquery-deferred').Deferred
@@ -89,7 +89,8 @@ module.exports =
 		@downloadDeferred = dfd()
 
 		# Download the specified node-webkit distribution
-		downloadPromise = downloader.ensure @nwversion
+		downloader = new NodeWebkitDownloader(@nwversion)
+		downloadPromise = downloader.ensure()
 
 		downloadPromise.done (@snapshotterPath, @nwPath) =>
 			# We proxy the promise as we want to set the context, set local flags, 
