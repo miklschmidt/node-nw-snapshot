@@ -210,12 +210,12 @@ module.exports = class NodeWebkitDownloader
 			# Extract the downloaded archive
 			.then(@extract)
 			# Check if the binaries exist and resolve/reject
-			.done(() ->
+			.done () ->
 				if @verifyBinaries
 					ensureDeferred.resolveWith @, @getSnapshotBin(), @getNwBin()
 				else
 					ensureDeferred.rejectWith @, new Error("The expected binaries couldn't be found in the downloaded archive.")
 			# Something in the chain went wrong, reject the deferred.
-			).fail (err) ->
+			.fail (err) ->
 				ensureDeferred.rejectWith @, err
 		ensureDeferred.promise()

@@ -9,7 +9,7 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "coffee-script": "~1.6.0",
+    "coffee-script": "~1.7.0",
     "axon": "~1.0.0",
     "jquery-deferred": "~0.3.0",
     "mkdirp": "~0.3.5",
@@ -17,6 +17,8 @@
     "debug": "~0.7.4",
     "escape-regexp": "0.0.1",
     "request": "~2.33.0",
-    "decompress-zip": "0.0.4"
+    "decompress-zip": "0.0.4",
+    "mocha": "~1.17.1",
+    "should": "~3.1.2"
   }
 }

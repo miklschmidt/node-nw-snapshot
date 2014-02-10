@@ -165,7 +165,7 @@ module.exports =
 	###
 	iterate: () ->
 		@iterations--
-		@compile().then(@test)
+		@compile().then @test
 
 	###
 	# Starts the snapshotter.
@@ -178,7 +178,7 @@ module.exports =
 		@runDeferred = dfd()
 
 		# Start compilating and testing.
-		@iterate().then(() ->
+		@iterate().then () ->
 			# Nothing to do here. Snapshot is good so return true.
 			yes
 
@@ -191,7 +191,7 @@ module.exports =
 			# Try again and append the promise to the chain or fail if iterations are used up.
 			if @iterations > 0 then @iterate() else no
 
-		).done(() ->
+		.done () ->
 			# Snapshot test passed, clean up!
 			@cleanupTest.always () ->
 				# Read the snapshot into a buffer
@@ -203,7 +203,7 @@ module.exports =
 				# Finally reset the state for the next job.
 				@resetState()
 
-		).fail (err) ->
+		.fail (err) ->
 			# Snapshot testing failed, clean up!
 			@cleanupTest.always () ->
 				@cleanupSnapshot()
@@ -320,12 +320,12 @@ module.exports =
 	###
 	test: () ->
 		@testDeferred = dfd()
-		@launch().fail((err) ->
+		@launch().fail (err) ->
 			# Testing failed, clean up the snapshot so somebody doesn't 
 			# accidentally use it some where.
 			@cleanupSnapshot()
 			@testDeferred.rejectWith @, err
-		).done () ->
+		.done () ->
 			# Testing succeeded.
 			@testDeferred.resolveWith @
 		@testDeferred.promise()
