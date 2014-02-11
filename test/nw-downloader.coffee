@@ -47,7 +47,7 @@ describe "NodeWebkitDownloader", () ->
 			
 	describe "#download", () ->
 		this.timeout(60000)
-		it 'should resolve when downloaded', (done) ->
+		it 'should resolve the promise when downloaded', (done) ->
 			downloader = new NodeWebkitDownloader '0.8.1'
 			doneCalled = false
 			failCalled = false
@@ -57,4 +57,16 @@ describe "NodeWebkitDownloader", () ->
 			.always () -> 
 				doneCalled.should.be.true
 				failCalled.should.be.false
+				done()
+
+		it 'should reject the promise when download failed', (done) ->
+			downloader = new NodeWebkitDownloader '9999.99999.9999' # useless version number to force a fail.
+			doneCalled = false
+			failCalled = false
+			downloader.download()
+			.done () -> doneCalled = true
+			.fail () -> failCalled = true
+			.always () -> 
+				doneCalled.should.be.false
+				failCalled.should.be.true
 				done()

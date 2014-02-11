@@ -100,7 +100,7 @@ module.exports = class NodeWebkitDownloader
 
 		# Create the directory
 		mkdirp @getLocalPath(), (err) =>
-			handleError(err) if err
+			handleError err if err
 
 			destinationFile = path.join @getLocalPath(), filename
 			destinationStream = fs.createWriteStream destinationFile
@@ -119,6 +119,16 @@ module.exports = class NodeWebkitDownloader
 			destinationStream.on 'close', () =>
 				downloadDeferred.resolveWith @, [destinationFile]
 
+			# We need to listen for the response event, since 404 responses don't seem to
+			# trigger the error event. Without this check the promise would be resolved even 
+			# if the server responded with 404.
+			req.on 'response', (response) ->
+				if response.statusCode isnt 200
+					downloadDeferred.rejectWith @, [
+						new Error("Bad response (code #{response.statusCode}. 
+						           The version you requested (#{@version}) probably doesn't exist.")
+					]
+					destinationStream.end()
 			# Pipe the request data to the local file
 			req.pipe destinationStream
 
@@ -150,7 +160,9 @@ module.exports = class NodeWebkitDownloader
 
 		# Check that the input file exists.
 		unless fs.existsSync input
-			return extractDeferred.rejectWith @, [new Error('The specified input file does not exist')]
+			return extractDeferred.rejectWith @, [
+				new Error('The specified input file does not exist')
+			]
 
 		# Ensure that the extraction destination exists.
 		mkdirp output, (err) ->
@@ -219,7 +231,10 @@ module.exports = class NodeWebkitDownloader
 				if @verifyBinaries
 					ensureDeferred.resolveWith @, [@getSnapshotBin(), @getNwBin()]
 				else
-					ensureDeferred.rejectWith @, [new Error("The expected binaries couldn't be found in the downloaded archive.")]
+					ensureDeferred.rejectWith @, [
+						new Error("The expected binaries couldn't be 
+							       found in the downloaded archive.")
+					]
 			# Something in the chain went wrong, reject the deferred.
 			.fail (err) ->
 				ensureDeferred.rejectWith @, [err]
