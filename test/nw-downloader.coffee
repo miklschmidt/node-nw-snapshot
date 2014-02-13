@@ -1,7 +1,33 @@
 should = require 'should'
 NodeWebkitDownloader = require '../nw-downloader.coffee'
+rimraf = require 'rimraf'
+fs = require 'fs'
+path = require 'path'
+
+binFolder = 'test_bin'
+
+after (done) ->
+	rimraf path.join(__dirname, '..', binFolder), (err) ->
+		throw err if err
+		done()
+
+before (done) ->
+	if fs.existsSync(path.join __dirname, '..', binFolder)
+		rimraf path.join(__dirname, '..', binFolder), (err) ->
+			throw err if err
+			done()
+	else
+		done()
+
 describe "NodeWebkitDownloader", () ->
 	describe "#constructor", () ->
+		it 'should throw errors when version is undefined', () ->
+			try
+				downloader = new NodeWebkitDownloader
+			catch e
+				err = e
+			should.exist err
+
 		it 'should properly set platform and arch without parameters', () ->
 			downloader = new NodeWebkitDownloader '0.8.1'
 			if process.platform.match(/^darwin/) 
@@ -46,9 +72,11 @@ describe "NodeWebkitDownloader", () ->
 				done()
 			
 	describe "#download", () ->
-		this.timeout(60000)
 		it 'should resolve the promise when downloaded', (done) ->
+			this.timeout(60000)
 			downloader = new NodeWebkitDownloader '0.8.1'
+			downloader.binFolder = binFolder
+
 			doneCalled = false
 			failCalled = false
 			downloader.download()
@@ -61,6 +89,7 @@ describe "NodeWebkitDownloader", () ->
 
 		it 'should reject the promise when download failed', (done) ->
 			downloader = new NodeWebkitDownloader '9999.99999.9999' # useless version number to force a fail.
+			downloader.binFolder = binFolder
 			doneCalled = false
 			failCalled = false
 			downloader.download()
@@ -69,4 +98,49 @@ describe "NodeWebkitDownloader", () ->
 			.always () -> 
 				doneCalled.should.be.false
 				failCalled.should.be.true
+				# Remove the bogus directory created with the crazy version number
+				rimraf downloader.getLocalPath(), (err) ->
+					done()
+
+
+		it 'should resolve the promise even if the download already exists', (done) ->
+			# NOTE: This is dependent on the first #download test passing
+			downloader = new NodeWebkitDownloader '0.8.1'
+			downloader.binFolder = binFolder
+			doneCalled = false
+			failCalled = false
+			downloader.download()
+			.done () -> doneCalled = true
+			.fail () -> failCalled = true
+			.always () -> 
+				doneCalled.should.be.true
+				failCalled.should.be.false
 				done()
+
+	describe "#extract", () ->
+		this.timeout(60000)
+
+		# NOTE: This is dependent on the #download tests passing
+		# should probably fix this and supply archives for proper testing.
+		testExtraction = (platform, arch) ->
+			downloader = new NodeWebkitDownloader '0.8.1', platform, arch
+			downloader.binFolder = binFolder
+			doneCalled = false
+			failCalled = false
+
+			promise = downloader.download().then(downloader.extract)
+			.done () ->
+				downloader.verifyBinaries().should.be.true
+			.fail (err) ->
+				# fails the test
+				throw err
+			return promise
+
+		it 'should be able to extract osx-ia32 archive', (done) -> testExtraction('osx', 'ia32').always done
+		it 'should be able to extract win-ia32 archive', (done) -> testExtraction('win', 'ia32').always done
+		it 'should be able to extract linux-ia32 archive', (done) -> testExtraction('linux', 'ia32').always done
+		it 'should be able to extract linux-x64 archive', (done) -> testExtraction('linux', 'x64').always done
+
+
+
+
