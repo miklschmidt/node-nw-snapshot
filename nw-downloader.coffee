@@ -2,17 +2,14 @@
 # Dependencies
 ###
 
-path = require 'path'
-config = require './config.coffee'
-fs = require 'fs'
-dfd = require('jquery-deferred').Deferred
-rimraf = require 'rimraf'
-mkdirp = require 'mkdirp'
-DecompressZip = require 'decompress-zip'
+path    = require 'path'
+config  = require './config.coffee'
+fs      = require 'fs'
+dfd     = require('jquery-deferred').Deferred
+rimraf  = require 'rimraf'
+mkdirp  = require 'mkdirp'
 request = require 'request'
-tar = require 'tar'
-exec = require('child_process').exec
-zlib = require "zlib"
+utils   = require './utils.coffee'
 
 ###
 # NodeWebkitDownloader Class definition
@@ -156,74 +153,10 @@ module.exports = class NodeWebkitDownloader
 		cleanDeferred = dfd()
 		# Delete the directory and all its content.
 		rimraf @getLocalPath(), (err) =>
-			return cleanDeferred.rejectWith @, [err]
+			return cleanDeferred.rejectWith @, [err] if err
 			cleanDeferred.resolveWith @
 
 		cleanDeferred.promise()
-
-	###
-	# Unzip input into output.
-	# Uses native unzip on osx and js implementation on linux and win
-	#
-	# @param {String} input
-	# @param {String} output
-	# @return {Promise}
-	# @api private
-	###
-	unzip: (input, output) ->
-		throw new Error "No input file specifed" unless input
-		throw new Error "No ouput folder specified" unless output
-		unzipDeferred = dfd()
-		# Need to know which platform we're on which is 
-		# why we don't use @platform.
-		if config.platform is 'osx'
-			# Use native unzip
-			exec "unzip -o '#{input}' -d '#{output}'", {cwd: output}, (err) =>
-				return unzipDeferred.rejectWith @, [err] if err
-				unzipDeferred.resolveWith @
-		else
-			# Unzip is not guaranteed on linux so use js unzip implementation.
-			# Unfortunately most node.js zip implementations are
-			# extremely flaky.
-			unzip = new DecompressZip input
-			unzip.on 'error', (err) =>
-				unzipDeferred.rejectWith @, [err]
-			unzip.on 'extract', () =>
-				unzipDeferred.resolveWith @
-			unzip.extract {path: output}
-		
-		unzipDeferred.promise()
-
-	###
-	# Untar input into output.
-	# Uses native tar on osx and linux and js implementation on win
-	#
-	# @param {String} input
-	# @param {String} output
-	# @return {Promise}
-	# @api private
-	###
-	untar: (input, output) ->
-		untarDeferred = dfd()
-		throw new Error "No input file specifed" unless input
-		throw new Error "No ouput folder specified" unless output
-		# Need to know which platform we're on which is 
-		# why we don't use @platform.
-		if config.platform in ['osx', 'linux']
-			# Use native tar
-			exec "tar -xf '#{input}'", {cwd: output}, (err) =>
-				return untarDeferred.rejectWith @, [err] if err
-				untarDeferred.resolveWith @
-		else
-			# Baaaah windows.. Use js tar implementation
-			# This is *incredibly* slow (150-300s).. But seems to work for now.
-			src = fs.createReadStream input
-			src.pipe(zlib.createGunzip()).pipe tar.Extract path: output
-			.on 'end', () => untarDeferred.resolveWith @
-			.on 'error', (err) => untarDeferred.rejectWith @, [err]
-
-		untarDeferred.promise()
-
 
 	###
 	# Extracts the node-webkit archive.
@@ -245,12 +178,12 @@ module.exports = class NodeWebkitDownloader
 		mkdirp output, (err) =>
 			return extractDeferred.rejectWith @, [err] if err
 
-			# If extension is .tar or .tar.gz use @untar
+			# If extension is .tar or .tar.gz use utils.untar
 			if path.extname(path.basename(input, '.gz')) is '.tar'
-				extractMethod = @untar
-			# if extension is .zip use @unzip
+				extractMethod = utils.untar
+			# if extension is .zip use utils.unzip
 			else if path.extname(input) is '.zip'
-				extractMethod = @unzip
+				extractMethod = utils.unzip
 			# unknown extension, throw error
 			else extractDeferred.rejectWith @, [new Error("Unknown extension #{path.extname(input)}")]
 
@@ -300,7 +233,7 @@ module.exports = class NodeWebkitDownloader
 			.then(@extract)
 			# Check if the binaries exist and resolve/reject
 			.done () ->
-				if @verifyBinaries
+				if @verifyBinaries()
 					ensureDeferred.resolveWith @, [@getSnapshotBin(), @getNwBin()]
 				else
 					ensureDeferred.rejectWith @, [

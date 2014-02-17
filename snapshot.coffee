@@ -2,26 +2,27 @@
 # Dependencies
 ###
 
-config = require './config.coffee'
+config               = require './config.coffee'
 NodeWebkitDownloader = require './nw-downloader.coffee'
-path = require 'path'
-exec = require('child_process').exec
-dfd = require('jquery-deferred').Deferred
-mkdirp = require 'mkdirp'
-rimraf = require 'rimraf'
-fs = require 'fs'
+path                 = require 'path'
+exec                 = require('child_process').exec
+dfd                  = require('jquery-deferred').Deferred
+mkdirp               = require 'mkdirp'
+rimraf               = require 'rimraf'
+fs                   = require 'fs'
+utils                = require './utils'
 
 ###
 # States
 ###
 
-STATE_READY = 0
+STATE_READY       = 0
 STATE_CONFIGURING = 1
-STATE_PREPARING = 2
-STATE_BUILDING = 3
-STATE_MAKINGTEST = 4
-STATE_TESTING = 5
-STATE_CLEANINGUP = 6
+STATE_PREPARING   = 2
+STATE_BUILDING    = 3
+STATE_MAKINGTEST  = 4
+STATE_TESTING     = 5
+STATE_CLEANINGUP  = 6
 
 ###
 # Snapshot Object
@@ -33,13 +34,16 @@ module.exports =
 	# Properties
 	###
 	prepared: false
-	outputFile: path.join __dirname, 'source.bin'
 	state: STATE_READY
+	outputFileName: 'snapshot.bin'
+	outputFilePath: null
 	execTimeout: null
 	abort: no
 
 	###
 	# Configures the snapshot object for building and testing.
+	# NOTE: data.appSourceNw is a zip archive containing all files needed 
+	# to run the app (usually called app.nw). That is all assets and package.json.
 	#
 	# @param {Object} data
 	# @return {Promise}
@@ -55,8 +59,9 @@ module.exports =
 		@state = STATE_CONFIGURING
 
 		# Check if we recieved the data we need, reject the deferred if not.
-		unless data.nwversion and data.snapshotSource and data.appSource and data.package
-			err = new Error("Insufficient information, you must supply nwversion, snapshotSource, appSource and package.")
+		unless data.nwVersion and data.snapshotSource and data.appSourceNw
+			err = new Error("Insufficient information, you must supply nwVersion, snapshotSource, appSourceNw.")
+			@resetState()
 			@configurationDeferred.rejectWith @, [err]
 
 		# Default iterations if none specified.
@@ -64,20 +69,48 @@ module.exports =
 			data.iterations = 1
 
 		# Set local properties from the data object and resolve.
-		{@nwversion, @snapshotSource, @package, @appSource, @iterations} = data
+		{@nwVersion, @snapshotSource, @appSourceNw, @iterations} = data
 		@prepared = false
 		@configurationDeferred.resolveWith @
 		@configurationDeferred.promise()
 	
 	###
-	# Prepares the specified node-webkit version for compiling native snapshot.
+	# Prepares the specified node-webkit version for compiling the snapshot.
 	#
 	# @return {Promise}
 	# @api private
 	###
 	prepare: () ->
 		@state = STATE_PREPARING
-		@download().then(@makeTestDirectory)
+		@preparationDeferred = dfd()
+		@download()
+		.then(@makeTestDirectory)
+		.then(@extractSource)
+		.done () ->
+			@preparationDeferred.resolveWith @
+		.fail (err) ->
+			@preparationDeferred.rejectWith @, [err]
+		@preparationDeferred.promise()
+
+	extractSource: () ->
+		@state = STATE_PREPARING
+		@extractDeferred = dfd()
+		mkdirp path.join(@testdir, 'src'), (err) =>
+			zipLocation = path.join(@testdir, 'src', 'app.zip')
+			fs.writeFile zipLocation, @appSourceNw, 'binary', (err) =>
+				return unless @checkState @extractDeferred, STATE_PREPARING, err
+				utils.unzip zipLocation, path.join(@testdir, 'src')
+				.done () =>
+					# Write snapshot information to package.json
+					packagePath = path.join @testdir, 'src', 'package.json'
+					packageJson = JSON.parse fs.readFileSync packagePath
+					packageJson.snapshot = @outputFileName
+					fs.writeFile packagePath, JSON.stringify(packageJson), (err) =>
+						return unless @checkState @extractDeferred, STATE_PREPARING, err
+						@extractDeferred.resolveWith @
+				.fail (err) =>
+					@extractDeferred.rejectWith @, [err]
+		@extractDeferred.promise()
 
 	###
 	# Downloads the specified node-webkit version.
@@ -89,7 +122,7 @@ module.exports =
 		@downloadDeferred = dfd()
 
 		# Download the specified node-webkit distribution
-		downloader = new NodeWebkitDownloader(@nwversion)
+		downloader = new NodeWebkitDownloader(@nwVersion)
 		downloadPromise = downloader.ensure()
 
 		downloadPromise.done (@snapshotterPath, @nwPath) =>
@@ -115,27 +148,47 @@ module.exports =
 	makeTestDirectory: () ->
 		@makeDeferred = dfd()
 		@state = STATE_MAKINGTEST
-		@testdir = path.join __dirname, "tmp", new Date().now()
+		@testdir = path.join __dirname, "tmp", new Date().getTime() + ""
 
 		# Make sure the testdir exists
-		mkdirp @testdir, (err) ->
-			return if @checkState(@makeDeferred, STATE_MAKINGTEST, err)
-
-			# Modify the package.json to use our snapshot			
-			package = JSON.parse @package.toString()
-			package.snapshot = path.basename @outputFile
-			package = JSON.stringify package
-
-			# Write package.json
-			fs.writeFile path.join(@testdir, "package.json"), package, (err) ->
-				return if @checkState(@makeDeferred, STATE_MAKINGTEST, err)
-
-				# Write dist.nw
-				fs.writeFile path.join(@testdir, "dist.nw"), @appSource, (err) ->
-					return if @checkState(@makeDeferred, STATE_MAKINGTEST, err)
-					@makeDeferred.resolveWith @,[ @testdir]
+		mkdirp @testdir, (err) =>
+			return unless @checkState(@makeDeferred, STATE_MAKINGTEST, err)
+			@makeDeferred.resolveWith @,[ @testdir]
 
 		@makeDeferred.promise()
+
+
+	patchSource: () ->
+		@patchDeferred = dfd()
+		@state = STATE_BUILDING
+
+		# Make an id to make sure we're called back from the right application
+		# and not some random resurrected zombie node-webkit process from a previous test.
+		# The id is used as a flag for launching the app, so that u need the build id to trigger
+		# the build callback.
+		@id = new Date().now() + '_' + (Math.random() * (1000 - 1) + 1)
+
+		# Generate callback code
+		callbackCode = """
+			// callback for build testing
+			;var orgLoad = window.onload;
+			window.onload = function() {
+				callbackArgIndex = process.argv.indexOf('--#{@id}');
+				if (callbackArgIndex > -1) {
+					url = "#{config.callbackURL}/#{@id}"
+					script = document.createElement('script');
+					script.src = url;
+					document.querySelector('body').appendChild(script);
+				}
+				orgLoad.apply(this, arguments);
+			}
+		"""
+		# Write snapshot js with appended callback code
+		fs.writeFile path.join(@testdir, 'snapshot.js'), @snapshotSource.toString() + callbackCode, (err) =>
+			return unless @checkState @patchDeferred, STATE_BUILDING, err
+			@patchDeferred.resolveWith @
+
+		@patchDeferred.promise()
 	
 	###
 	# Compiles the snapshot.
@@ -147,13 +200,24 @@ module.exports =
 		@state = STATE_BUILDING
 		@buildDeferred = dfd()
 
+		@outputFilePath = path.join @testdir, @outputFileName
+		@testFilePath = path.join(@testdir, 'src', path.basename @outputFileName)
+
 		# Compile the snapshot
-		exec "#{@snapshotterPath} --extra_code #{@snapshotSource} #{@outputFile}", (err) ->
-			if @checkState(@buildDeferred, STATE_BUILDING, err)
-				# Copy the snapshot to the test dir
-				fs.writefileSync path.join(@testdir, path.basename(@outputFile)), fs.readFileSync @outputFile
-				# Resolve the deferred, we're done.
-				@buildDeferred.resolveWith @
+		@patchSource()
+		.done () ->
+			exec "#{@snapshotterPath} --extra_code #{path.join @testdir, 'snapshot.js'} #{@outputFilePath}", (err) =>
+				if @checkState(@buildDeferred, STATE_BUILDING, err)
+					# Copy the snapshot to the test dir
+					fs.readFile @outputFilePath, 'binary', (err, data) =>
+						return unless @checkState(@buildDeferred, STATE_BUILDING, err)
+						fs.writeFile @testFilePath, data, 'binary', (err) =>
+							return unless @checkState(@buildDeferred, STATE_BUILDING, err)
+							# Resolve the deferred, we're done.
+							@buildDeferred.resolveWith @
+		.fail (err) ->
+			@buildDeferred.rejectWith @, [err]
+
 
 		@buildDeferred.promise()
 
@@ -187,7 +251,7 @@ module.exports =
 			@tries++
 			@runDeferred.notifyWith @, [err, @tries]
 			# Delete old snapshot
-			fs.unlinkSync path.join(@testdir, path.basename(@outputFile))
+			fs.unlinkSync @outputFilePath
 			# Try again and append the promise to the chain or fail if iterations are used up.
 			if @iterations > 0 then @iterate() else no
 
@@ -195,7 +259,7 @@ module.exports =
 			# Snapshot test passed, clean up!
 			@cleanupTest.always () ->
 				# Read the snapshot into a buffer
-				fileBuffer = fs.readFileSync(@outputFile)
+				fileBuffer = fs.readFileSync @outputFilePath, 'binary'
 				# Clean up the snapshot
 				@cleanupSnapshot()
 				# Resolve the deferred, we were succesful!
@@ -248,7 +312,7 @@ module.exports =
 		@cleanupDeferred = dfd()
 
 		# Delete the test directory and all its content.
-		rimraf @testdir, (err) ->
+		rimraf @testdir, (err) =>
 			return if @cleanupDeferred.rejectWith @, [err] if err
 			@cleanupDeferred.resolveWith @ 
 		
@@ -278,7 +342,8 @@ module.exports =
 		true
 
 	###
-	# Launces the app with the compiled snapshot.
+	# Launces the app with the compiled snapshot. 
+	# NOTE: patchSource/compile has to be run first to generate an id and callback code.
 	#
 	# @return {Promise}
 	# @api private
@@ -288,21 +353,20 @@ module.exports =
 		@launchDeferred = dfd()
 		@didNotify = false
 
-		# Make an id to make sure we're called back from the right application
-		# and not some random resurrected zombie node-webkit process from a previous test
-		@id = new Date().now() + '_' (Math.random() * (1000 - 1) + 1)
+		unless @id
+			@launchDeferred.rejectWith @, [new Error("Can't launch the test without a test id. See @compile() and @patchSource().")]
 
 		# Execute the application 
-		@process = exec """#{@nwPath} --buildcallback "#{config.callbackURL}/#{@id}" #{@testdir}"""
+		@process = exec """#{@nwPath} --#{@id} #{@testdir}"""
 
 		# Set a timeout, we don't want to wait for the application forever.
-		@execTimeout = setTimeout () ->
+		@execTimeout = setTimeout () =>
 			@process.kill()
 			@launchDeferred.rejectWith @, [new Error("Timeout in testing after #{config.timeout}ms.")]
 		, config.timeout
 
 		# When the process exits, check if we we're called back
-		@process.on 'exit', () ->
+		@process.on 'exit', () =>
 			if @didNotify
 				@launchDeferred.resolveWith @
 				@didNotify = false
@@ -367,7 +431,7 @@ module.exports =
 			when STATE_READY then @resetStateAndResolve()
 			when STATE_CONFIGURING then @configurationDeferred.always @resetStateAndResolve
 			when STATE_PREPARING then @preparationDeferred.always @resetStateAndResolve
-			when STATE_BUILDING @buildDeferred.always @resetStateAndResolve
+			when STATE_BUILDING then @buildDeferred.always @resetStateAndResolve
 			when STATE_MAKINGTEST then @makeDeferred.always @resetStateAndResolve
 			when STATE_TESTING
 				@launchDeferred.always @resetStateAndResolve

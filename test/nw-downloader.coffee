@@ -165,5 +165,24 @@ describe "NodeWebkitDownloader", () ->
 		it 'should be able to ensure that a specified version is available for linux-x64', (done) -> testEnsure('linux', 'x64').always () -> done()
 
 
+	describe "#cleanVersionDirectoryForPlatform", () ->
+		it 'should delete the directory', () ->
+			downloader = new NodeWebkitDownloader '0.8.1'
+			downloader.binFolder = binFolder
+			doneCalled = false
+			failCalled = false
 
+			fs.existsSync(downloader.getLocalPath()).should.be.true
+
+			promise = downloader.cleanVersionDirectoryForPlatform()
+			.done () ->
+				doneCalled = true
+			.fail (err) ->
+				failCalled = true
+				throw err
+			.always () ->
+				doneCalled.should.be.true
+				failCalled.should.be.false
+				fs.existsSync(downloader.getLocalPath()).should.be.false
+				done()
 
