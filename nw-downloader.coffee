@@ -12,6 +12,7 @@ DecompressZip = require 'decompress-zip'
 request = require 'request'
 tar = require 'tar'
 exec = require('child_process').exec
+zlib = require "zlib"
 
 ###
 # NodeWebkitDownloader Class definition
@@ -184,12 +185,13 @@ module.exports = class NodeWebkitDownloader
 			# Unzip is not guaranteed on linux so use js unzip implementation.
 			# Unfortunately most node.js zip implementations are
 			# extremely flaky.
-			unzip = DecompressZip input
+			unzip = new DecompressZip input
 			unzip.on 'error', (err) =>
 				unzipDeferred.rejectWith @, [err]
 			unzip.on 'extract', () =>
 				unzipDeferred.resolveWith @
 			unzip.extract {path: output}
+		
 		unzipDeferred.promise()
 
 	###
@@ -214,8 +216,9 @@ module.exports = class NodeWebkitDownloader
 				untarDeferred.resolveWith @
 		else
 			# Baaaah windows.. Use js tar implementation
+			# This is *incredibly* slow (150-300s).. But seems to work for now.
 			src = fs.createReadStream input
-			src.pipe tar.Extract path: output
+			src.pipe(zlib.createGunzip()).pipe tar.Extract path: output
 			.on 'end', () => untarDeferred.resolveWith @
 			.on 'error', (err) => untarDeferred.rejectWith @, [err]
 

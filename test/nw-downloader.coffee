@@ -118,15 +118,13 @@ describe "NodeWebkitDownloader", () ->
 				done()
 
 	describe "#extract", () ->
-		this.timeout(60000)
+		this.timeout(600000)
 
 		# NOTE: This is dependent on the #download tests passing
 		# should probably fix this and supply archives for proper testing.
 		testExtraction = (platform, arch) ->
 			downloader = new NodeWebkitDownloader '0.8.1', platform, arch
 			downloader.binFolder = binFolder
-			doneCalled = false
-			failCalled = false
 
 			promise = downloader.download().then(downloader.extract)
 			.done () ->
@@ -140,6 +138,31 @@ describe "NodeWebkitDownloader", () ->
 		it 'should be able to extract win-ia32 archive', (done) -> testExtraction('win', 'ia32').always done
 		it 'should be able to extract linux-ia32 archive', (done) -> testExtraction('linux', 'ia32').always done
 		it 'should be able to extract linux-x64 archive', (done) -> testExtraction('linux', 'x64').always done
+
+	describe "#ensure", () ->
+
+		testEnsure = (platform, arch) ->
+			downloader = new NodeWebkitDownloader '0.8.1', platform, arch
+			downloader.binFolder = binFolder
+			doneCalled = false
+			failCalled = false
+
+			promise = downloader.ensure()
+			.done () ->
+				doneCalled = true
+			.fail (err) ->
+				failCalled = true
+				throw err
+			.always () ->
+				doneCalled.should.be.true
+				failCalled.should.be.false
+			return promise
+
+
+		it 'should be able to ensure that a specified version is available for osx-ia32', (done) -> testEnsure('osx', 'ia32').always () -> done()
+		it 'should be able to ensure that a specified version is available for win-ia32', (done) -> testEnsure('win', 'ia32').always () -> done()
+		it 'should be able to ensure that a specified version is available for linux-ia32', (done) -> testEnsure('linux', 'ia32').always () -> done()
+		it 'should be able to ensure that a specified version is available for linux-x64', (done) -> testEnsure('linux', 'x64').always () -> done()
 
 
 
