@@ -92,6 +92,13 @@ module.exports =
 			@preparationDeferred.rejectWith @, [err]
 		@preparationDeferred.promise()
 
+	###
+	# Extracts the application source code to the test directory, and
+	# patches the package.json file to make use of the snapshot.
+	#
+	# @return {Promise}
+	# @api private
+	###
 	extractSource: () ->
 		@state = STATE_PREPARING
 		@extractDeferred = dfd()
@@ -157,7 +164,14 @@ module.exports =
 
 		@makeDeferred.promise()
 
-
+	###
+	# Patches the snapshot source code with the build callback function.
+	# The callback function is supposed to be invoked from the main .html file.
+	# This is done to test the validity of the snapshot, to make sure it works.
+	#
+	# @return {Promise}
+	# @api private
+	###
 	patchSource: () ->
 		@patchDeferred = dfd()
 		@state = STATE_BUILDING
@@ -166,13 +180,12 @@ module.exports =
 		# and not some random resurrected zombie node-webkit process from a previous test.
 		# The id is used as a flag for launching the app, so that u need the build id to trigger
 		# the build callback.
-		@id = new Date().now() + '_' + (Math.random() * (1000 - 1) + 1)
+		@id = new Date().getTime() + '_' + (Math.random() * (1000 - 1) + 1)
 
 		# Generate callback code
 		callbackCode = """
 			// callback for build testing
-			;var orgLoad = window.onload;
-			window.onload = function() {
+			__buildcallbackWrapper = function() {
 				callbackArgIndex = process.argv.indexOf('--#{@id}');
 				if (callbackArgIndex > -1) {
 					url = "#{config.callbackURL}/#{@id}"
@@ -180,7 +193,6 @@ module.exports =
 					script.src = url;
 					document.querySelector('body').appendChild(script);
 				}
-				orgLoad.apply(this, arguments);
 			}
 		"""
 		# Write snapshot js with appended callback code
@@ -196,7 +208,7 @@ module.exports =
 	# @return {Promise}
 	# @api private
 	###
-	compile: () =>
+	compile: () ->
 		@state = STATE_BUILDING
 		@buildDeferred = dfd()
 
@@ -241,27 +253,32 @@ module.exports =
 		@tries = 0
 		@runDeferred = dfd()
 
-		# Start compilating and testing.
-		@iterate().then () ->
-			# Nothing to do here. Snapshot is good so return true.
-			yes
+		unless @prepared
+			@runDeferred.rejectWith @, [new Error("You need to run prepare() first!")]
+			return @runDeferred.promise()
 
-		, (err) ->
-			# Notify about the failure
-			@tries++
-			@runDeferred.notifyWith @, [err, @tries]
-			# Delete old snapshot
-			fs.unlinkSync @outputFilePath
-			# Try again and append the promise to the chain or fail if iterations are used up.
-			if @iterations > 0 then @iterate() else no
+		doneFilter = () ->
+				# Nothing to do here. Snapshot is good.
+
+		failFilter = (err) ->
+				# Notify about the failure
+				@tries++
+				@runDeferred.notifyWith @, [err, @tries]
+				# Delete old snapshot
+				@cleanupSnapshot()
+				# Try again and append the promise to the chain or fail if iterations are used up.
+				if @iterations > 0 then @iterate().then.apply(@, filters) else err
+
+		filters = [doneFilter, failFilter]
+
+		# Start compilating and testing.
+		@iterate().then.apply @, filters
 
 		.done () ->
 			# Snapshot test passed, clean up!
-			@cleanupTest.always () ->
-				# Read the snapshot into a buffer
-				fileBuffer = fs.readFileSync @outputFilePath, 'binary'
-				# Clean up the snapshot
-				@cleanupSnapshot()
+			# Read the snapshot into a buffer
+			fileBuffer = fs.readFileSync @outputFilePath, 'binary'
+			@cleanupTest().always () ->
 				# Resolve the deferred, we were succesful!
 				@runDeferred.resolveWith @, [fileBuffer, @tries]
 				# Finally reset the state for the next job.
@@ -269,9 +286,8 @@ module.exports =
 
 		.fail (err) ->
 			# Snapshot testing failed, clean up!
-			@cleanupTest.always () ->
-				@cleanupSnapshot()
-				@runDeferred.rejectWith @, [new Error("Couldn't verify snapshot: " + err?.message), @tries]
+			@cleanupTest().always () ->
+				@runDeferred.rejectWith @, [err, @tries]
 				@resetState()
 
 		@runDeferred.promise()
@@ -325,7 +341,7 @@ module.exports =
 	# @api private
 	###
 	cleanupSnapshot: () ->
-		fs.unlinkSync @outputFile
+		fs.unlinkSync @outputFilePath if fs.existsSync @outputFilePath
 
 	###
 	# Notifies the snapshotter when the app has launced succesfully.
@@ -357,7 +373,8 @@ module.exports =
 			@launchDeferred.rejectWith @, [new Error("Can't launch the test without a test id. See @compile() and @patchSource().")]
 
 		# Execute the application 
-		@process = exec """#{@nwPath} --#{@id} #{@testdir}"""
+		exePath = path.join @testdir, 'src'
+		@process = exec """#{@nwPath} --#{@id} #{exePath}"""
 
 		# Set a timeout, we don't want to wait for the application forever.
 		@execTimeout = setTimeout () =>
@@ -372,7 +389,10 @@ module.exports =
 				@didNotify = false
 			else
 				clearTimeout @execTimeout
-				@launchDeferred.rejectWith @, [new Error("Process exited without calling back.")]
+				@launchDeferred.rejectWith @, [new Error("""
+					Process exited without calling back. Probably just another bad snapshot. 
+					Could also be that you are not calling __buildcallbackWrapper() from your main html file.
+					""")]
 
 		@launchDeferred.promise()
 
