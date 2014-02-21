@@ -1,53 +1,32 @@
 config = require './config.coffee'
 Snapshot = require './snapshot.coffee'
-sock = require './axon-pubsub'
+socket = new (require './axon-pubsub')
 express = require 'express'
-sock.subscribe('build')
 
-sock.on 'message', (opts) ->
-	buildDeferred = dfd()
-	Snapshot.config(opts, sock)
+socket.on 'message', (nwVersion, appSourceNw, snapshotSource, iterations) ->
+	Snapshot.config {
+		nwVersion: nwVersion.toString(), 
+		appSourceNw, 
+		snapshotSource, 
+		iterations: parseInt(iterations)
+	}
 	Snapshot.prepare()
-	.then(Snapshot.build_and_test)
-	.progress((status, tries) ->
-		sock.send 'progress', status, tries
-	).fail((err, tries) ->
-		sock.send 'fail', tries
-	).done (snapshot, tries) ->
-		sock.send 'success', snapshot, tries
+	.then Snapshot.run
+	.progress (status, tries) ->
+		socket.send 'progress', status.toString(), tries.toString()
+	.fail (err, tries) ->
+		socket.send 'fail', err.toString(), tries?.toString() or '0'
+	.done (snapshot, tries) ->
+		socket.send 'done', snapshot, tries.toString()
 
-sock.bind(config.sockPort)
+socket.bind("tcp://127.0.0.1:#{config.sockPort}")
 
-answerBackServer = express()
+app = express()
 
-answerBackServer.get '/callback/:id', (req, res) ->
+app.get '/callback/:id', (req, res) ->
 	Snapshot.notify req.params.id
-	res.end(200)
+	res.end()
 
-answerBackServer.listen(config.answerPort)
+server = app.listen config.httpPort
 
-
-#TODO: Get an answer back from Circadio... somehow...
-
-
-
-
-
-
-# OLD
-
-server.get '/answerback', (req, res) ->
-
-server.post '/', (req, res) ->
-	source_file = req.files.source.path # The file to snapshot
-	package_json = req.packageDescription # The package.json file (used for testing)
-	nw_version = req.nwVersion # The version of node-webkit to compile for and test against
-
-	try
-
-
-
-
-
-server.listen(config.port)
-console.log "Node-webkit buildserver running on port " + config.port
+module.exports = {app, server, socket}

@@ -26,8 +26,8 @@ module.exports = class NodeWebkitDownloader
 	# default to the current platform and architecture.
 	#
 	# @param {Object} version
-	# @param {String} platform
-	# @param {String} arch
+	# @param {String} [platform]
+	# @param {String} [arch]
 	# @return {NodeWebkitDownloader}
 	# @api private
 	###

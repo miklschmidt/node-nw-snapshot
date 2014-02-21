@@ -38,7 +38,8 @@ module.exports =
 	outputFileName: 'snapshot.bin'
 	outputFilePath: null
 	execTimeout: null
-	abort: no
+	aborted: no
+	tries: 0
 
 	###
 	# Configures the snapshot object for building and testing.
@@ -46,7 +47,7 @@ module.exports =
 	# to run the app (usually called app.nw). That is all assets and package.json.
 	#
 	# @param {Object} data
-	# @return {Promise}
+	# @returns {Promise}
 	# @api public
 	###
 	config: (data) ->
@@ -77,7 +78,7 @@ module.exports =
 	###
 	# Prepares the specified node-webkit version for compiling the snapshot.
 	#
-	# @return {Promise}
+	# @returns {Promise}
 	# @api private
 	###
 	prepare: () ->
@@ -89,14 +90,14 @@ module.exports =
 		.done () ->
 			@preparationDeferred.resolveWith @
 		.fail (err) ->
-			@preparationDeferred.rejectWith @, [err]
+			@preparationDeferred.rejectWith @, [err, @tries]
 		@preparationDeferred.promise()
 
 	###
 	# Extracts the application source code to the test directory, and
 	# patches the package.json file to make use of the snapshot.
 	#
-	# @return {Promise}
+	# @returns {Promise}
 	# @api private
 	###
 	extractSource: () ->
@@ -122,7 +123,7 @@ module.exports =
 	###
 	# Downloads the specified node-webkit version.
 	#
-	# @return {Promise}
+	# @returns {Promise}
 	# @api private
 	###
 	download: () ->
@@ -149,7 +150,7 @@ module.exports =
 	###
 	# Creates the test directory with application files.
 	#
-	# @return {Promise}
+	# @returns {Promise}
 	# @api private
 	###
 	makeTestDirectory: () ->
@@ -169,7 +170,7 @@ module.exports =
 	# The callback function is supposed to be invoked from the main .html file.
 	# This is done to test the validity of the snapshot, to make sure it works.
 	#
-	# @return {Promise}
+	# @returns {Promise}
 	# @api private
 	###
 	patchSource: () ->
@@ -180,13 +181,13 @@ module.exports =
 		# and not some random resurrected zombie node-webkit process from a previous test.
 		# The id is used as a flag for launching the app, so that u need the build id to trigger
 		# the build callback.
-		@id = new Date().getTime() + '_' + (Math.random() * (1000 - 1) + 1)
+		@id = new Date().getTime() + '_' + Math.round(Math.random() * (1000 - 1) + 1)
 
 		# Generate callback code
 		callbackCode = """
 			// callback for build testing
-			__buildcallbackWrapper = function() {
-				callbackArgIndex = process.argv.indexOf('--#{@id}');
+			var __buildcallbackWrapper = function() {
+				callbackArgIndex = require('nw.gui').App.argv.indexOf('--#{@id}');
 				if (callbackArgIndex > -1) {
 					url = "#{config.callbackURL}/#{@id}"
 					script = document.createElement('script');
@@ -205,7 +206,7 @@ module.exports =
 	###
 	# Compiles the snapshot.
 	#
-	# @return {Promise}
+	# @returns {Promise}
 	# @api private
 	###
 	compile: () ->
@@ -236,7 +237,7 @@ module.exports =
 	###
 	# Starts an iteration which will compile and test the snapshot.
 	#
-	# @return {Promise}
+	# @returns {Promise}
 	# @api private
 	###
 	iterate: () ->
@@ -246,7 +247,7 @@ module.exports =
 	###
 	# Starts the snapshotter.
 	#
-	# @return {Promise}
+	# @returns {Promise}
 	# @api public
 	###
 	run: () ->
@@ -299,7 +300,7 @@ module.exports =
 	# @param {Deferred} deferred.
 	# @param {Integer} expectedState
 	# @param {Error} err 
-	# @return {Boolean}
+	# @returns {Boolean}
 	# @api private
 	###
 	checkState: (deferred, expectedState, err = null) ->
@@ -310,7 +311,7 @@ module.exports =
 			err = new Error("State mismatch. State was #{@state} expecting #{expectedState}.")
 			deferred.rejectWith @, [err]
 			return false
-		if @abort
+		if @aborted
 			# If we need to abort we just reject the deferred so 
 			# everything will happen naturally.
 			deferred.rejectWith @, [new Error('Aborted!')]
@@ -320,7 +321,7 @@ module.exports =
 	###
 	# Cleans up (deletes) the test directory.
 	#
-	# @return {Promise}
+	# @returns {Promise}
 	# @api private
 	###
 	cleanupTest: () ->
@@ -337,7 +338,7 @@ module.exports =
 	###
 	# Cleans up (deletes) the compiled snapshot.
 	#
-	# @return {Boolean} result of unlink.
+	# @returns {Boolean} result of unlink.
 	# @api private
 	###
 	cleanupSnapshot: () ->
@@ -348,7 +349,7 @@ module.exports =
 	# This method should be called from the server when the callback URL is requested.
 	# Calling this method will immediately kill the app, as it's no longer needed.
 	#
-	# @return {Boolean} always true. 
+	# @returns {Boolean} always true. 
 	# @api public
 	###
 	notify: (id) ->
@@ -361,7 +362,7 @@ module.exports =
 	# Launces the app with the compiled snapshot. 
 	# NOTE: patchSource/compile has to be run first to generate an id and callback code.
 	#
-	# @return {Promise}
+	# @returns {Promise}
 	# @api private
 	###
 	launch: () ->
@@ -374,7 +375,7 @@ module.exports =
 
 		# Execute the application 
 		exePath = path.join @testdir, 'src'
-		@process = exec """#{@nwPath} --#{@id} #{exePath}"""
+		@process = exec """#{@nwPath} "--#{@id}" #{exePath}"""
 
 		# Set a timeout, we don't want to wait for the application forever.
 		@execTimeout = setTimeout () =>
@@ -399,7 +400,7 @@ module.exports =
 	###
 	# Tests the compiled snapshot.
 	#
-	# @return {Promise}
+	# @returns {Promise}
 	# @api private
 	###
 	test: () ->
@@ -417,11 +418,11 @@ module.exports =
 	###
 	# Resets the snapshotter object's state.
 	#
-	# @return {Boolean} always true
+	# @returns {Boolean} always true
 	# @api private
 	###
 	resetState: () ->
-		@abort = no
+		@aborted = no
 		@prepared = false
 		@state = STATE_READY
 		true
@@ -429,7 +430,7 @@ module.exports =
 	###
 	# Calls resetState and resolves the abortDeferred.
 	#
-	# @return {Deferred}
+	# @returns {Deferred}
 	# @api private
 	###
 	resetStateAndResolve: () ->
@@ -440,13 +441,14 @@ module.exports =
 	# Aborts current process, and properly cleans up.
 	# This method is called from the server when an 'abort' event is recieved.
 	#
-	# @return {Promise}
+	# @returns {Promise}
 	# @api public
 	###
 	abort: () ->
+		console.log 'abort!'
 		@abortDeferred = dfd()
-		@abort = yes
-		# The deferreds will fail once an async method is completed because of @abort.
+		@aborted = yes
+		# The deferreds will fail once an async method is completed because of @aborted.
 		switch @state
 			when STATE_READY then @resetStateAndResolve()
 			when STATE_CONFIGURING then @configurationDeferred.always @resetStateAndResolve

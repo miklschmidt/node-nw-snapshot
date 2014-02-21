@@ -4,22 +4,23 @@
  */
 
 var Socket = require('axon').Socket
-  , debug = require('debug')('axon:sub')
-  , escape = require('escape-regexp');
+  , debug = require('debug')('axon:pubsub')
+  , escape = require('escape-regexp')
+  , slice = require('axon/lib/utils').slice;
 
 /**
- * Expose `SubSocket`.
+ * Expose `PubSubSocket`.
  */
 
-module.exports = SubSocket;
+module.exports = PubSubSocket;
 
 /**
- * Initialize a new `SubSocket`.
+ * Initialize a new `PubSubSocket`.
  *
  * @api private
  */
 
-function SubSocket() {
+function PubSubSocket() {
   Socket.call(this);
   this.subscriptions = [];
 }
@@ -28,7 +29,7 @@ function SubSocket() {
  * Inherits from `Socket.prototype`.
  */
 
-SubSocket.prototype.__proto__ = Socket.prototype;
+PubSubSocket.prototype.__proto__ = Socket.prototype;
 
 /**
  * Check if this socket has subscriptions.
@@ -37,7 +38,7 @@ SubSocket.prototype.__proto__ = Socket.prototype;
  * @api public
  */
 
-SubSocket.prototype.hasSubscriptions = function(){
+PubSubSocket.prototype.hasSubscriptions = function(){
   return !! this.subscriptions.length;
 };
 
@@ -49,7 +50,7 @@ SubSocket.prototype.hasSubscriptions = function(){
  * @api public
  */
 
-SubSocket.prototype.matches = function(topic){
+PubSubSocket.prototype.matches = function(topic){
   for (var i = 0; i < this.subscriptions.length; ++i) {
     if (this.subscriptions[i].test(topic)) {
       return true;
@@ -66,7 +67,7 @@ SubSocket.prototype.matches = function(topic){
  * @api private
  */
 
-SubSocket.prototype.onmessage = function(sock){
+PubSubSocket.prototype.onmessage = function(sock){
   var self = this;
   var patterns = this.subscriptions;
 
@@ -92,7 +93,7 @@ SubSocket.prototype.onmessage = function(sock){
  * @api public
  */
 
-SubSocket.prototype.subscribe = function(re){
+PubSubSocket.prototype.subscribe = function(re){
   debug('subscribe to "%s"', re);
   this.subscriptions.push(re = toRegExp(re));
   return re;
@@ -104,7 +105,7 @@ SubSocket.prototype.subscribe = function(re){
  * @api public
  */
 
-SubSocket.prototype.clearSubscriptions = function(){
+PubSubSocket.prototype.clearSubscriptions = function(){
   this.subscriptions = [];
 };
 
@@ -115,7 +116,7 @@ SubSocket.prototype.clearSubscriptions = function(){
  * @api public
  */
 
-PubSocket.prototype.send = function(msg){
+PubSubSocket.prototype.send = function(msg){
   var socks = this.socks
     , len = socks.length
     , sock;

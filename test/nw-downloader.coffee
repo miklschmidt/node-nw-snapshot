@@ -166,7 +166,7 @@ describe "NodeWebkitDownloader", () ->
 
 
 	describe "#cleanVersionDirectoryForPlatform", () ->
-		it 'should delete the directory', () ->
+		it 'should delete the directory', (done) ->
 			downloader = new NodeWebkitDownloader '0.8.1'
 			downloader.binFolder = binFolder
 			doneCalled = false

@@ -13,6 +13,8 @@ before () ->
 	fixtures.app = fs.readFileSync (path.join __dirname, 'fixtures', 'app.zip'), 'binary'
 	fixtures.snapshotSource = fs.readFileSync (path.join __dirname, 'fixtures', 'snapshot.js')
 
+# TODO: Test for snapshot callback url!
+
 describe "Snapshot", () ->
 
 	describe "#constructor", () ->
