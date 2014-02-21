@@ -32,31 +32,29 @@ describe "Client / Server", () ->
 
 	describe "pubsub socket", () ->
 
-		describe 'Server', () ->
+		it "server should build when message is recieved and report back to client", (done) ->
 
-			it "should build when message is recieved and report back", (done) ->
+			# Mock the snapshot config function so we will know 
+			# if the server starts to build.
+			oldConfig = Snapshot.config
+			oldPrepare = Snapshot.prepare
+			Snapshot.config = (opts) ->
+				opts.nwVersion.should.be.equal '0.8.1'
+				opts.appSourceNw.length.should.be.equal fixtures.app.length
+				opts.snapshotSource.length.should.be.equal fixtures.snapshotSource.length
+			Snapshot.prepare = () ->
+				return dfd().reject(new Error('mock!'), 0).promise()
 
-				# Mock the snapshot config function so we will know 
-				# if the server starts to build.
-				oldConfig = Snapshot.config
-				oldPrepare = Snapshot.prepare
-				Snapshot.config = (opts) ->
-					opts.nwVersion.should.be.equal '0.8.1'
-					opts.appSourceNw.length.should.be.equal fixtures.app.length
-					opts.snapshotSource.length.should.be.equal fixtures.snapshotSource.length
-				Snapshot.prepare = () ->
-					return dfd().reject(new Error('mock!'), 0).promise()
+			client.on 'fail', () ->
+				Snapshot.config = oldConfig
+				Snapshot.prepare = oldPrepare
+				client.removeAllListeners()
+				done()
 
-				client.on 'fail', () ->
-					Snapshot.config = oldConfig
-					Snapshot.prepare = oldPrepare
-					client.removeAllListeners()
-					done()
-
-				client.build fixtures.iterations
-				# setTimeout () ->
-				# 	done()
-				# , 1500
+			client.build fixtures.iterations
+			# setTimeout () ->
+			# 	done()
+			# , 1500
 
 
 	describe "http callback route", () ->
