@@ -1,35 +1,48 @@
-should = require 'should'
-NodeWebkitDownloader = require '../nw-downloader.coffee'
-rimraf = require 'rimraf'
-fs = require 'fs'
-path = require 'path'
+###
+# Dependencies
+###
 
-binFolder = 'test_bin'
+should       = require 'should'
+{Downloader} = require '../index.js'
+rimraf       = require 'rimraf'
+fs           = require 'fs'
+path         = require 'path'
 
-after (done) ->
-	rimraf path.join(__dirname, '..', binFolder), (err) ->
-		throw err if err
-		done()
+###
+# Fixtures
+###
 
-before (done) ->
-	if fs.existsSync(path.join __dirname, '..', binFolder)
+binFolder    = 'test_bin'
+
+###
+# Tests
+###
+
+describe "NodeWebkitDownloader", () ->
+
+	after (done) ->
 		rimraf path.join(__dirname, '..', binFolder), (err) ->
 			throw err if err
 			done()
-	else
-		done()
 
-describe "NodeWebkitDownloader", () ->
+	before (done) ->
+		if fs.existsSync(path.join __dirname, '..', binFolder)
+			rimraf path.join(__dirname, '..', binFolder), (err) ->
+				throw err if err
+				done()
+		else
+			done()
+
 	describe "#constructor", () ->
 		it 'should throw errors when version is undefined', () ->
 			try
-				downloader = new NodeWebkitDownloader
+				downloader = new Downloader
 			catch e
 				err = e
 			should.exist err
 
 		it 'should properly set platform and arch without parameters', () ->
-			downloader = new NodeWebkitDownloader '0.8.1'
+			downloader = new Downloader '0.8.1'
 			if process.platform.match(/^darwin/) 
 				platform = 'osx'
 			else if process.platform.match(/^win/)
@@ -44,18 +57,18 @@ describe "NodeWebkitDownloader", () ->
 
 		it 'should throw errors when supplied invalid platform or arch', () ->
 			try
-				downloader = new NodeWebkitDownloader '0.8.1', 'bogusPlatform', 'bogusArch'
+				downloader = new Downloader '0.8.1', 'bogusPlatform', 'bogusArch'
 			catch e
 				err = e
 			should.exist err
 
 		it 'should throw errors when supplied unsupported platform and arch combination', () ->
 			try
-				downloader = new NodeWebkitDownloader '0.8.1', 'win', 'x64'
+				downloader = new Downloader '0.8.1', 'win', 'x64'
 			catch e
 				winErr = e
 			try
-				downloader = new NodeWebkitDownloader '0.8.1', 'osx', 'x64'
+				downloader = new Downloader '0.8.1', 'osx', 'x64'
 			catch e
 				osxErr = e
 			should.exist winErr
@@ -63,7 +76,7 @@ describe "NodeWebkitDownloader", () ->
 
 	describe "#getDownloadURL", () ->
 		it 'should return a valid download url', (done) ->
-			downloader = new NodeWebkitDownloader '0.8.1'
+			downloader = new Downloader '0.8.1'
 			url = downloader.getDownloadURL()
 			require('request').head url, (err, response, body) ->
 				should.not.exist err
@@ -74,7 +87,7 @@ describe "NodeWebkitDownloader", () ->
 	describe "#download", () ->
 		it 'should resolve the promise when downloaded', (done) ->
 			this.timeout(60000)
-			downloader = new NodeWebkitDownloader '0.8.1'
+			downloader = new Downloader '0.8.1'
 			downloader.binFolder = binFolder
 
 			doneCalled = false
@@ -88,7 +101,7 @@ describe "NodeWebkitDownloader", () ->
 				done()
 
 		it 'should reject the promise when download failed', (done) ->
-			downloader = new NodeWebkitDownloader '9999.99999.9999' # useless version number to force a fail.
+			downloader = new Downloader '9999.99999.9999' # useless version number to force a fail.
 			downloader.binFolder = binFolder
 			doneCalled = false
 			failCalled = false
@@ -105,7 +118,7 @@ describe "NodeWebkitDownloader", () ->
 
 		it 'should resolve the promise even if the download already exists', (done) ->
 			# NOTE: This is dependent on the first #download test passing
-			downloader = new NodeWebkitDownloader '0.8.1'
+			downloader = new Downloader '0.8.1'
 			downloader.binFolder = binFolder
 			doneCalled = false
 			failCalled = false
@@ -123,7 +136,7 @@ describe "NodeWebkitDownloader", () ->
 		# NOTE: This is dependent on the #download tests passing
 		# should probably fix this and supply archives for proper testing.
 		testExtraction = (platform, arch) ->
-			downloader = new NodeWebkitDownloader '0.8.1', platform, arch
+			downloader = new Downloader '0.8.1', platform, arch
 			downloader.binFolder = binFolder
 
 			promise = downloader.download().then(downloader.extract)
@@ -142,7 +155,7 @@ describe "NodeWebkitDownloader", () ->
 	describe "#ensure", () ->
 
 		testEnsure = (platform, arch) ->
-			downloader = new NodeWebkitDownloader '0.8.1', platform, arch
+			downloader = new Downloader '0.8.1', platform, arch
 			downloader.binFolder = binFolder
 			doneCalled = false
 			failCalled = false
@@ -167,7 +180,7 @@ describe "NodeWebkitDownloader", () ->
 
 	describe "#cleanVersionDirectoryForPlatform", () ->
 		it 'should delete the directory', (done) ->
-			downloader = new NodeWebkitDownloader '0.8.1'
+			downloader = new Downloader '0.8.1'
 			downloader.binFolder = binFolder
 			doneCalled = false
 			failCalled = false

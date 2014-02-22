@@ -2,9 +2,9 @@
 # Dependencies
 ###
 
-Emitter = require('events').EventEmitter
-fs = require 'fs'
-Socket = require './axon-pubsub'
+Emitter      = require('events').EventEmitter
+fs           = require 'fs'
+PubSubSocket = require './pubsub.js'
 
 
 ###
@@ -56,7 +56,7 @@ module.exports = class SnapshotClient extends Emitter
 	connect: (address, callback) ->
 		unless typeof address is 'string'
 			address = 'tcp://127.0.0.1:' + address
-		@socket = new Socket()
+		@socket = new PubSubSocket()
 		@socket.connect(address)
 		@socket.on 'connect', () =>
 			@connected = true

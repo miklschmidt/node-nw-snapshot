@@ -2,14 +2,14 @@
 # Dependencies
 ###
 
+Config  = require '../config.coffee'
+Utils   = require './utils.coffee'
 path    = require 'path'
-config  = require './config.coffee'
 fs      = require 'fs'
 dfd     = require('jquery-deferred').Deferred
 rimraf  = require 'rimraf'
 mkdirp  = require 'mkdirp'
 request = require 'request'
-utils   = require './utils.coffee'
 
 ###
 # NodeWebkitDownloader Class definition
@@ -31,7 +31,7 @@ module.exports = class NodeWebkitDownloader
 	# @return {NodeWebkitDownloader}
 	# @api private
 	###
-	constructor: (@version, @platform = config.platform, @arch = config.arch) ->
+	constructor: (@version, @platform = Config.platform, @arch = Config.arch) ->
 		throw new Error "No version specified" unless @version
 		unless @platform in ['win', 'osx', 'linux']
 			throw new Error "Platform must be one of 'osx', 'linux' or 'win'"
@@ -48,7 +48,7 @@ module.exports = class NodeWebkitDownloader
 	###
 	getDownloadURL: () ->
 		extension = if @platform is 'linux' then 'tar.gz' else 'zip'
-		"#{config.downloadURL}/v#{@version}/node-webkit-v#{@version}-#{@platform}-#{@arch}.#{extension}"
+		"#{Config.downloadURL}/v#{@version}/node-webkit-v#{@version}-#{@platform}-#{@arch}.#{extension}"
 
 	###
 	# Returns the local path to the directory where the node-webkit 
@@ -58,7 +58,7 @@ module.exports = class NodeWebkitDownloader
 	# @api public
 	###
 	getLocalPath: () ->
-		path.join __dirname, @binFolder, @version, "#{@platform}-#{@arch}"
+		path.join __dirname, '..', @binFolder, @version, "#{@platform}-#{@arch}"
 
 	###
 	# Returns the local path to the snapshot binary.
@@ -178,21 +178,21 @@ module.exports = class NodeWebkitDownloader
 		mkdirp output, (err) =>
 			return extractDeferred.rejectWith @, [err] if err
 
-			# If extension is .tar or .tar.gz use utils.untar
+			# If extension is .tar or .tar.gz use Utils.untar
 			if path.extname(path.basename(input, '.gz')) is '.tar'
-				extractMethod = utils.untar
-			# if extension is .zip use utils.unzip
+				extractMethod = Utils.untar
+			# if extension is .zip use Utils.unzip
 			else if path.extname(input) is '.zip'
-				extractMethod = utils.unzip
+				extractMethod = Utils.unzip
 			# unknown extension, throw error
 			else extractDeferred.rejectWith @, [new Error("Unknown extension #{path.extname(input)}")]
 
 			# extract!
 			if extractMethod
 				extractMethod(input, output)
-				.done () ->
+				.done () =>
 					extractDeferred.resolveWith @
-				.fail (err) ->
+				.fail (err) =>
 					extractDeferred.rejectWith @, [err]
 			else
 				extractDeferred.rejectWith @, [new Error("No extract method")]

@@ -1,34 +1,41 @@
-should = require 'should'
-Snapshot = require '../snapshot.coffee'
-rimraf = require 'rimraf'
-fs = require 'fs'
-path = require 'path'
-config = require '../config.coffee'
-dfd     = require('jquery-deferred').Deferred
+###
+# Dependencies
+###
+
+should                             = require 'should'
+{Snapshot, Config, Server, Client} = require '../index.js'
+rimraf                             = require 'rimraf'
+fs                                 = require 'fs'
+path                               = require 'path'
+dfd                                = require('jquery-deferred').Deferred
+
+###
+# Fixtures
+###
 
 fixtures =
 	app: null
 	snapshotSource: null
 	iterations: 1
 
-before () ->
-	fixtures.app = fs.readFileSync (path.join __dirname, 'fixtures', 'app.zip')
-	fixtures.snapshotSource = fs.readFileSync (path.join __dirname, 'fixtures', 'snapshot.js')
+###
+# Tests
+###
 
 describe "Client / Server", () ->
 
 	client = null
-	server = null
 
 	before (done) ->
-		server = require '../server'
-		client = new (require '../client.coffee') '0.8.1', fixtures.app, fixtures.snapshotSource
-		client.connect config.sockPort, done
+		fixtures.app = fs.readFileSync (path.join __dirname, 'fixtures', 'app.zip')
+		fixtures.snapshotSource = fs.readFileSync (path.join __dirname, 'fixtures', 'snapshot.js')
+		Server.start()
+		client = new Client '0.8.1', fixtures.app, fixtures.snapshotSource
+		client.connect Config.sockPort, done
 
 	after () ->
 		client.disconnect()
-		server.socket.close()
-		server.server.close()
+		Server.stop()
 
 	describe "pubsub socket", () ->
 
@@ -52,9 +59,6 @@ describe "Client / Server", () ->
 				done()
 
 			client.build fixtures.iterations
-			# setTimeout () ->
-			# 	done()
-			# , 1500
 
 
 	describe "http callback route", () ->
@@ -68,19 +72,40 @@ describe "Client / Server", () ->
 				Snapshot.notify = oldNotify
 				done()
 
-			require('request').get "http://127.0.0.1:#{config.httpPort}/callback/test", (err, response, body) ->
+			require('request').get "http://127.0.0.1:#{Config.httpPort}/callback/test", (err, response, body) ->
 				throw err if err
 				response.statusCode.should.be.equal 200
 
-	# describe "all", () ->
-	# 	this.timeout(120000)
-	# 	it "should do everything (this is so", (done) ->
-	# 		client.build 1
-	# 		client.on 'progress', (status, tries) -> console.log 'progress:', status, tries
-	# 		client.on 'fail', (err, tries) -> 
-	# 			console.log 'fail:', err, tries
-	# 			done()
-	# 		client.on 'done', (snapshot, tries) -> 
-	# 			console.log 'done:', snapshot, tries
-	# 			done()
-					
+	describe "all", () ->
+		this.timeout(120000)
+		it "should do everything (stupid catch all test)", (done) ->
+			client.build 1
+			# client.on 'progress', (status, tries) -> console.log 'progress:', status, tries
+			client.on 'fail', (err, tries) -> 
+				# console.log 'fail:', err, tries
+				done()
+			client.on 'done', (snapshot, tries) -> 
+				# console.log 'done:', snapshot, tries
+				done()
+		after () ->
+			client.removeAllListeners()
+
+	describe "nwsnapshot binary", () ->
+		this.timeout(1000 * 60 * 10) # 10 minutes
+		it "Should compile a valid snapshot each time (test nwsnapshotter)", (done) ->
+			n = 20
+			fails = 0
+			wins = 0
+			final = () ->
+				wins.should.be.equal 20
+				fails.should.be.equal 0
+				console.log fails, wins
+				done()
+
+			client.build 1
+			client.on 'fail', (err, tries) -> 
+				fails++
+				if --n then client.build 1 else final()
+			client.on 'done', (snapshot, tries) -> 
+				wins++
+				if --n then client.build 1 else final()

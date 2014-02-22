@@ -1,21 +1,33 @@
-should = require 'should'
-Snapshot = require '../snapshot.coffee'
-rimraf = require 'rimraf'
-fs = require 'fs'
-path = require 'path'
+###
+# Dependencies
+###
+
+should     = require 'should'
+{Snapshot} = require '../index.js'
+rimraf     = require 'rimraf'
+fs         = require 'fs'
+path       = require 'path'
+
+###
+# Fixtures
+###
 
 fixtures =
 	app: null
 	snapshotSource: null
 	iterations: 5
 
-before () ->
-	fixtures.app = fs.readFileSync (path.join __dirname, 'fixtures', 'app.zip'), 'binary'
-	fixtures.snapshotSource = fs.readFileSync (path.join __dirname, 'fixtures', 'snapshot.js')
+###
+# Tests
+###
 
-# TODO: Test for snapshot callback url!
+# TODO: Add test for snapshot callback url!
 
 describe "Snapshot", () ->
+
+	before () ->
+		fixtures.app = fs.readFileSync (path.join __dirname, 'fixtures', 'app.zip'), 'binary'
+		fixtures.snapshotSource = fs.readFileSync (path.join __dirname, 'fixtures', 'snapshot.js')
 
 	describe "#constructor", () ->
 

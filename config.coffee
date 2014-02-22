@@ -22,8 +22,8 @@ else
 	else
 		throw new Error("Unsupported platform architecture '#{process.arch}'")
 
-config.timeout = 20000 # ms before giving up and failing the test
-config.callbackURL = "http://localhost:#{config.httpPort}/callback"
+config.timeout = 10000 # ms before giving up and failing the test
+config.callbackURL = "http://127.0.0.1:#{config.httpPort}/callback"
 
 config.downloadURL = "https://s3.amazonaws.com/node-webkit"
 

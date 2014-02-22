@@ -2,7 +2,7 @@
 # Dependencies
 ###
 
-config        = require './config.coffee'
+Config        = require '../config.coffee'
 fs            = require 'fs'
 dfd           = require('jquery-deferred').Deferred
 DecompressZip = require 'decompress-zip'
@@ -31,7 +31,7 @@ module.exports =
 		unzipDeferred = dfd()
 		# Need to know which platform we're on which is 
 		# why we don't use @platform.
-		if config.platform is 'osx'
+		if Config.platform is 'osx'
 			# Use native unzip
 			exec "unzip -o '#{input}' -d '#{output}'", {cwd: output}, (err) =>
 				return unzipDeferred.rejectWith @, [err] if err
@@ -64,7 +64,7 @@ module.exports =
 		throw new Error "No ouput folder specified" unless output
 		# Need to know which platform we're on which is 
 		# why we don't use @platform.
-		if config.platform in ['osx', 'linux']
+		if Config.platform in ['osx', 'linux']
 			# Use native tar
 			exec "tar -xf '#{input}'", {cwd: output}, (err) =>
 				return untarDeferred.rejectWith @, [err] if err

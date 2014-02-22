@@ -2,30 +2,30 @@
 # Dependencies
 ###
 
-config               = require './config.coffee'
-NodeWebkitDownloader = require './nw-downloader.coffee'
-path                 = require 'path'
-exec                 = require('child_process').exec
-dfd                  = require('jquery-deferred').Deferred
-mkdirp               = require 'mkdirp'
-rimraf               = require 'rimraf'
-fs                   = require 'fs'
-utils                = require './utils'
+Config     = require '../config.coffee'
+Downloader = require './downloader.coffee'
+Utils      = require './utils.coffee'
+path       = require 'path'
+exec       = require('child_process').exec
+dfd        = require('jquery-deferred').Deferred
+mkdirp     = require 'mkdirp'
+rimraf     = require 'rimraf'
+fs         = require 'fs'
 
 ###
 # States
 ###
 
-STATE_READY       = 0
-STATE_CONFIGURING = 1
-STATE_PREPARING   = 2
-STATE_BUILDING    = 3
-STATE_MAKINGTEST  = 4
-STATE_TESTING     = 5
-STATE_CLEANINGUP  = 6
+STATE_READY                 = 0
+STATE_CONFIGURING           = 1
+STATE_PREPARING             = 2
+STATE_BUILDING              = 3
+STATE_MAKINGTEST            = 4
+STATE_TESTING               = 5
+STATE_CLEANINGUP            = 6
 
 ###
-# Snapshot Object
+# Snapshot definition
 ###
 
 module.exports =
@@ -107,7 +107,7 @@ module.exports =
 			zipLocation = path.join(@testdir, 'src', 'app.zip')
 			fs.writeFile zipLocation, @appSourceNw, 'binary', (err) =>
 				return unless @checkState @extractDeferred, STATE_PREPARING, err
-				utils.unzip zipLocation, path.join(@testdir, 'src')
+				Utils.unzip zipLocation, path.join(@testdir, 'src')
 				.done () =>
 					# Write snapshot information to package.json
 					packagePath = path.join @testdir, 'src', 'package.json'
@@ -130,7 +130,7 @@ module.exports =
 		@downloadDeferred = dfd()
 
 		# Download the specified node-webkit distribution
-		downloader = new NodeWebkitDownloader(@nwVersion)
+		downloader = new Downloader(@nwVersion)
 		downloadPromise = downloader.ensure()
 
 		downloadPromise.done (@snapshotterPath, @nwPath) =>
@@ -156,7 +156,7 @@ module.exports =
 	makeTestDirectory: () ->
 		@makeDeferred = dfd()
 		@state = STATE_MAKINGTEST
-		@testdir = path.join __dirname, "tmp", new Date().getTime() + ""
+		@testdir = path.join __dirname, '..', "tmp", new Date().getTime() + ""
 
 		# Make sure the testdir exists
 		mkdirp @testdir, (err) =>
@@ -189,7 +189,7 @@ module.exports =
 			var __buildcallbackWrapper = function() {
 				callbackArgIndex = require('nw.gui').App.argv.indexOf('--#{@id}');
 				if (callbackArgIndex > -1) {
-					url = "#{config.callbackURL}/#{@id}"
+					url = "#{Config.callbackURL}/#{@id}"
 					script = document.createElement('script');
 					script.src = url;
 					document.querySelector('body').appendChild(script);
@@ -380,8 +380,8 @@ module.exports =
 		# Set a timeout, we don't want to wait for the application forever.
 		@execTimeout = setTimeout () =>
 			@process.kill()
-			@launchDeferred.rejectWith @, [new Error("Timeout in testing after #{config.timeout}ms.")]
-		, config.timeout
+			@launchDeferred.rejectWith @, [new Error("Timeout in testing after #{Config.timeout}ms.")]
+		, Config.timeout
 
 		# When the process exits, check if we we're called back
 		@process.on 'exit', () =>
