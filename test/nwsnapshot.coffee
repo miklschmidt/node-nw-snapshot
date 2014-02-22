@@ -20,7 +20,7 @@ fixtures =
 # Tests
 ###
 
-describe "Client / Server", () ->
+describe "nwsnapshot binary", () ->
 
 	client = null
 
@@ -35,22 +35,22 @@ describe "Client / Server", () ->
 		client.disconnect()
 		Server.stop()
 
-	describe "nwsnapshot binary", () ->
-		this.timeout(1000 * 60 * 10) # 10 minutes
-		it "Should compile a valid snapshot each time (test nwsnapshotter)", (done) ->
-			n = 50
-			fails = 0
-			wins = 0
-			final = () ->
-				wins.should.be.equal 50
-				fails.should.be.equal 0
-				console.log fails, wins
-				done()
+	this.timeout(1000 * 60 * 10) # 10 minutes
+	
+	it "Should compile a valid snapshot each time (test nwsnapshotter)", (done) ->
+		n = 50
+		fails = 0
+		wins = 0
+		final = () ->
+			wins.should.be.equal 50
+			fails.should.be.equal 0
+			console.log fails, wins
+			done()
 
-			client.build 1
-			client.on 'fail', (err, tries) -> 
-				fails++
-				if --n then client.build 1 else final()
-			client.on 'done', (snapshot, tries) -> 
-				wins++
-				if --n then client.build 1 else final()
+		client.build 1
+		client.on 'fail', (err, tries) -> 
+			fails++
+			if --n then client.build 1 else final()
+		client.on 'done', (snapshot, tries) -> 
+			wins++
+			if --n then client.build 1 else final()

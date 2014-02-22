@@ -6,17 +6,17 @@ Best of all, **no more broken snapshots** when deploying a new version of your a
 
 ## Why does this exist?
 
-My product [Circadio](https://getcircadio.com/) has an autoupdater that will automatically update the application when i publish a new version. I need to protect my source code, so i use snapshots. I distribute Circadio for Windows, OS X and Linux. 
+My application [Circadio](https://getcircadio.com/) has an autoupdater that will automatically update the application when i publish a new version. I need to protect my source code, so i use snapshots. I distribute Circadio for Windows, OS X and Linux which means i need some kind of server running on all the platforms for generating the snapshots for "one button deploys". Until now, that server has been extremely minimal and basically just consisted of an exec call and a simple http server. 
 
-I started noticing that on almost every deploy, one of my distributions would fail. After looking over my buildscripts, application code and distribution server i couldn't find the source of the problem. What worried me even more, was that on 4 consecutive deploys of the same code, the distribution that failed to run was totally random. One time it would be the Windows distribution, the other it would be the linux32 distribution, and so on. Sometimes everything just worked. 
+I started noticing that on almost every deploy, one of my distributions would fail. After looking over my buildscripts, application code and distribution server i couldn't find the source of the problem. What worried me even more, was that on 4 consecutive deploys of the same code, the distribution that failed to run was totally random. The first time it would be the Windows distribution, the next it would be the linux32 distribution, and so on. Sometimes everything just worked. 
 
-I finally traced the source of the problem to the snapshot. It seems that nwsnapshot will sometimes fail silently and generate a snapshot that will cause node-webkit to crash on launch. With no way to prove or prevent this from happening, i set out to create node-nw-snapshot.
+I finally traced the source of the problem to the snapshot. It seems that nwsnapshot will sometimes fail silently and generate a snapshot that will [cause node-webkit to crash on launch](https://github.com/rogerwang/node-webkit/issues/1295). With no way to prevent this from happening, i set out to create node-nw-snapshot.
 
 ## How it works
 
 When the server receives a build command, it will download the specified node-webkit version as needed and inject a small test function (9 LOC) into your snapshot code. The app will be launched with an automatically generated ID and the function will test for this id before executing a callback to the snapshot server.
 
-Since the function is located inside the snapshotted code, the app won't request the server if the snapshot is broken. That means you can be 100% certain that your snapshot will run.
+Since the function is located inside the snapshotted code, the app won't request the server if the snapshot is broken. That means you can be 100% certain that the snapshot you get back will run.
 
 ## Security
 
@@ -77,10 +77,10 @@ npm test
 
 Want to test the ratio at which nwsnapshot will fail?
 ```
-./node_modules/.bin/mocha --compilers coffee:coffee-script/register -R spec test/snapshot.coffee
+./node_modules/.bin/mocha --compilers coffee:coffee-script/register -R spec test/nwsnapshot.coffee
 ```
 
-On OSX with v0.8.1, nwsnapshot will produce a broken snapshot ~48 out of 100 runs.
+On OSX with v0.8.1, nwsnapshot will produce a broken snapshot ~40 out of 100 runs.
 
 #### Defaults
 
