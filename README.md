@@ -24,7 +24,7 @@ Note: 3 things can happen when launching the app.
 * It will immediately crash
 * It will hang forever.
 
-For the last case there's a timeout of 10s before the process is terminated and the snapshot is deemed broken.
+In the last case there's a timeout of 10s before the process is terminated and the snapshot is deemed broken.
 
 ## Security
 
@@ -101,19 +101,18 @@ On OSX with v0.8.1, nwsnapshot will produce a broken snapshot ~40 out of 100 run
 #### Defaults
 
 ##### Server socket ports:
-```
-osx servers will use 3001
-win32 servers will use 3002
-linux32 servers will use 3003
-linux64 servers will use 3004
-```
+
+* osx servers will use 3001
+* win32 servers will use 3002
+* linux32 servers will use 3003
+* linux64 servers will use 3004
+
 ##### Server http ports:
-```
-osx servers will use 3301
-win32 servers will use 3302
-linux32 servers will use 3303
-linux64 servers will use 3304
-```
+
+* osx servers will use 3301
+* win32 servers will use 3302
+* linux32 servers will use 3303
+* linux64 servers will use 3304
 
 If you're using `npm start` to start the server, you can override the default socket port by doing:
 ```
