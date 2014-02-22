@@ -5,3 +5,5 @@ tmp
 src
 v8.log
 *.DS_Store
+.gulpfile.coffee
+.gulpfile.js
