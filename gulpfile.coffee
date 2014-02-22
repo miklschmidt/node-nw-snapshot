@@ -1,6 +1,7 @@
 gulp   = require 'gulp'
 coffee = require 'gulp-coffee'
 exec   = require('child_process').exec
+path   = require 'path'
 
 gulp.task 'compile', ->
 	gulp.src './src/*.coffee'
@@ -11,13 +12,19 @@ gulp.task 'compile', ->
 	.pipe gulp.dest './lib'
 
 gulp.task 'test', ['compile'], ->
-	proc = exec "./node_modules/.bin/mocha --compilers coffee:coffee-script/register -R spec test/setup.coffee", (err) ->
+	mochaPath = path.join __dirname, 'node_modules', '.bin', 'mocha'
+	testPath = path.join 'test', 'setup.coffee'
+	cmd = "#{mochaPath} --compilers coffee:coffee-script/register -R spec #{testPath}"
+	proc = exec cmd, (err) ->
 	proc.stdout.pipe process.stdout
 	proc.stderr.pipe process.stderr
 
 gulp.task 'prepublish', ['compile', 'test'], ->
 
 gulp.task 'test-nwsnapshot', ['compile'], ->
-	proc = exec "./node_modules/.bin/mocha --compilers coffee:coffee-script/register -R spec test/nwsnapshot.coffee", (err) ->
+	mochaPath = path.join __dirname, 'node_modules', '.bin', 'mocha'
+	testPath = path.join 'test', 'nwsnapshot.coffee'
+	cmd = "#{mochaPath} --compilers coffee:coffee-script/register -R spec #{testPath}"
+	proc = exec cmd, (err) ->
 	proc.stdout.pipe process.stdout
 	proc.stderr.pipe process.stderr
