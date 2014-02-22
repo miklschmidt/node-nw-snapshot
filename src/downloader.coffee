@@ -2,8 +2,8 @@
 # Dependencies
 ###
 
-Config  = require '../config.coffee'
-Utils   = require './utils.coffee'
+Config  = require './config'
+Utils   = require './utils'
 path    = require 'path'
 fs      = require 'fs'
 dfd     = require('jquery-deferred').Deferred

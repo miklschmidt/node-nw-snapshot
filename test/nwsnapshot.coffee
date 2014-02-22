@@ -3,7 +3,7 @@
 ###
 
 should                   = require 'should'
-{Config, Server, Client} = require '../index.js'
+{Config, Server, Client} = require '../index'
 fs                       = require 'fs'
 path                     = require 'path'
 
@@ -36,7 +36,7 @@ describe "nwsnapshot binary", () ->
 		Server.stop()
 
 	this.timeout(1000 * 60 * 10) # 10 minutes
-	
+
 	it "Should compile a valid snapshot each time (test nwsnapshotter)", (done) ->
 		n = 50
 		fails = 0

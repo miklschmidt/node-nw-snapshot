@@ -2,9 +2,9 @@
 # Dependencies
 ###
 
-Config     = require '../config.coffee'
-Downloader = require './downloader.coffee'
-Utils      = require './utils.coffee'
+Config     = require './config'
+Downloader = require './downloader'
+Utils      = require './utils'
 path       = require 'path'
 exec       = require('child_process').exec
 dfd        = require('jquery-deferred').Deferred

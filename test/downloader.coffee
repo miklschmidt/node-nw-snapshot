@@ -3,7 +3,7 @@
 ###
 
 should       = require 'should'
-{Downloader} = require '../index.js'
+{Downloader} = require '../index'
 rimraf       = require 'rimraf'
 fs           = require 'fs'
 path         = require 'path'

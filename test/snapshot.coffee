@@ -3,7 +3,7 @@
 ###
 
 should     = require 'should'
-{Snapshot} = require '../index.js'
+{Snapshot, Config} = require '../index'
 rimraf     = require 'rimraf'
 fs         = require 'fs'
 path       = require 'path'
@@ -158,9 +158,8 @@ describe "Snapshot", () ->
 
 		it 'should timeout if nothing happens', (done) ->
 			# Set the timeout to be ridiculously low, so we fail pretty much instantly.
-			config = require('../config.coffee')
-			oldTimeout = config.timeout
-			config.timeout = 1
+			oldTimeout = Config.timeout
+			Config.timeout = 1
 
 			doneCalled = false
 			failCalled = false
@@ -174,16 +173,15 @@ describe "Snapshot", () ->
 				done()
 
 			# Put the original timeout back
-			config.timeout = oldTimeout
+			Config.timeout = oldTimeout
 			Snapshot.process.should.exist
 
 	describe "#test", () ->
 
 		it 'should clean up snapshot when failed', (done) ->
 			# Set the timeout to be ridiculously low, so we fail pretty much instantly.
-			config = require('../config.coffee')
-			oldTimeout = config.timeout
-			config.timeout = 1
+			oldTimeout = Config.timeout
+			Config.timeout = 1
 
 			doneCalled = false
 			failCalled = false
@@ -197,7 +195,7 @@ describe "Snapshot", () ->
 				fs.existsSync(Snapshot.outputFilePath).should.be.false
 
 				# Put the original timeout back
-				config.timeout = oldTimeout
+				Config.timeout = oldTimeout
 				Snapshot.process.should.exist
 
 				done()
@@ -207,9 +205,8 @@ describe "Snapshot", () ->
 
 		it "should iterate and notify", (done) ->
 			# Set the timeout to be ridiculously low, so we fail pretty much instantly.
-			config = require('../config.coffee')
-			oldTimeout = config.timeout
-			config.timeout = 1
+			oldTimeout = Config.timeout
+			Config.timeout = 1
 
 			doneCalled = false
 			failCalled = false
@@ -228,7 +225,7 @@ describe "Snapshot", () ->
 				failCalled.should.be.true
 
 				# Put the original timeout back
-				config.timeout = oldTimeout
+				Config.timeout = oldTimeout
 
 				done()
 

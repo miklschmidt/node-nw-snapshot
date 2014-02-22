@@ -6,13 +6,13 @@
   "keywords": [
     "node-webkit",
     "nw",
-    "nwsnapshot", 
-    "snapshot", 
-    "build", 
-    "test", 
-    "server", 
+    "nwsnapshot",
+    "snapshot",
+    "build",
+    "test",
+    "server",
     "client"
-    ],
+  ],
   "author": {
     "name": "Mikkel Schmidt",
     "email": "mikkel.schmidt@gmail.com"
@@ -28,12 +28,7 @@
   "license": "MIT",
   "scripts": {
     "start": "node server.js",
-    "test": "./node_modules/.bin/mocha --compilers coffee:coffee-script/register -R spec test/test-order.coffee"
-  },
-  "devDependecies": {
-    "coffee-script": "~1.7.0",
-    "mocha": "~1.17.1",
-    "should": "~3.1.2"
+    "prepublish": "gulp prepublish"
   },
   "dependencies": {
     "axon": "~1.0.0",
@@ -46,5 +41,12 @@
     "decompress-zip": "0.0.4",
     "tar": "~0.1.19",
     "express": "~3.4.8"
+  },
+  "devDependencies": {
+    "gulp-coffee": "^1.4.1",
+    "gulp": "^3.5.2",
+    "coffee-script": "~1.7.0",
+    "mocha": "~1.17.1",
+    "should": "~3.1.2"
   }
 }

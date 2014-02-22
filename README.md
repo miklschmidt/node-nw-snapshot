@@ -73,18 +73,19 @@ Start by cloning the repository:
 ```bash
 git clone https://github.com/miklschmidt/node-nw-snapshot.git
 cd node-nw-snapshot
+npm install -g gulp
 npm install
 ```
 
 The tests use a minimally modified version of the [frameless-window](https://github.com/zcbenz/nw-sample-apps/tree/master/frameless-window) example from the official node-webkit example applications. 
 
 ```bash
-npm test
+gulp test
 ```
 
 Want to test the ratio at which nwsnapshot will fail?
 ```
-./node_modules/.bin/mocha --compilers coffee:coffee-script/register -R spec test/nwsnapshot.coffee
+gulp test-nwsnapshot
 ```
 
 On OSX with v0.8.1, nwsnapshot will produce a broken snapshot ~40 out of 100 runs.

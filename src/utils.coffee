@@ -2,7 +2,7 @@
 # Dependencies
 ###
 
-Config        = require '../config.coffee'
+Config        = require './config'
 fs            = require 'fs'
 dfd           = require('jquery-deferred').Deferred
 DecompressZip = require 'decompress-zip'

@@ -3,7 +3,7 @@
 ###
 
 should                             = require 'should'
-{Snapshot, Config, Server, Client} = require '../index.js'
+{Snapshot, Config, Server, Client} = require '../index'
 rimraf                             = require 'rimraf'
 fs                                 = require 'fs'
 path                               = require 'path'

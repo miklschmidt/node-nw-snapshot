@@ -2,9 +2,9 @@
 # Dependencies
 ###
 
-Config       = require "../config.coffee"
-Snapshot     = require "./snapshot.coffee"
-PubSubSocket = require "./pubsub.js"
+Config       = require "./config"
+Snapshot     = require "./snapshot"
+PubSubSocket = require "./pubsub"
 express      = require 'express'
 
 ###
