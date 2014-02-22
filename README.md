@@ -14,9 +14,9 @@ I finally traced the source of the problem to the snapshot. It seems that nwsnap
 
 ## How it works
 
-When the server receives a build command, it will download the specified node-webkit version as needed and inject a small test function (9 LOC) into your snapshot code. The package.json file of you app will be modified to use the generated snapshot. After that the app will be launched with an automatically generated ID and the function will test for this id before executing a callback to the snapshot server.
+When the server receives a build command, it will download the specified node-webkit version as needed and inject a small test function (9 LOC) into your snapshot code. The package.json file of your app will be modified to use the generated snapshot. After that, the app will be launched with an automatically generated ID and the function will test for this id, before executing a callback to the snapshot server.
 
-Since the function is located inside the snapshotted code, the app won't request the server if the snapshot is broken. That means you can be 100% certain that the snapshot you get back will run.
+Since the function is located inside the snapshotted code, the app won't make a request to the server if the snapshot is broken. That means you can be 100% certain that the snapshot you get back will run.
 
 Note: 3 things can happen when launching the app.
 
@@ -28,7 +28,7 @@ For the last case there's a timeout of 10s before the process is terminated and 
 
 ## Security
 
-Since the code you will be snapshotting is probably propriatary (if not, why snapshot?) you probably don't want to pass your code through the internet. node-nw-snapshot uses unprotected sockets (based on [Axon](github.com/visionmedia/axon)) to communicate between clients and servers, and your code will be distributed in plain text (for now). You will probably want to keep your servers on the local network (i use VirtualBox). Besides this concern there is no reason your servers couldn't be located remotely, like on Amazon AWS.
+Since the code you will be snapshotting is probably propriatary (if not, why snapshot?) you probably don't want to pass your code through the internet. node-nw-snapshot uses insecure sockets (based on [Axon](github.com/visionmedia/axon)) to communicate between clients and servers, and your code will be transferred in plain text (for now). You will probably want to keep your servers on the local network (i use VirtualBox). Besides this concern there is no reason your servers couldn't be located remotely, like on Amazon AWS.
 
 ## Installation
 
@@ -41,7 +41,7 @@ npm install nw-snapshot
 Server:
 
 ```bash
-npm start
+npm start nw-snapshot
 ```
 
 Client:
