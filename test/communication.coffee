@@ -89,23 +89,3 @@ describe "Client / Server", () ->
 				done()
 		after () ->
 			client.removeAllListeners()
-
-	describe "nwsnapshot binary", () ->
-		this.timeout(1000 * 60 * 10) # 10 minutes
-		it "Should compile a valid snapshot each time (test nwsnapshotter)", (done) ->
-			n = 20
-			fails = 0
-			wins = 0
-			final = () ->
-				wins.should.be.equal 20
-				fails.should.be.equal 0
-				console.log fails, wins
-				done()
-
-			client.build 1
-			client.on 'fail', (err, tries) -> 
-				fails++
-				if --n then client.build 1 else final()
-			client.on 'done', (snapshot, tries) -> 
-				wins++
-				if --n then client.build 1 else final()
