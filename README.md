@@ -2,7 +2,7 @@
 
 node-nw-snapshot is a cross platform buildserver and client for compiling and testing v8 snapshots of [node-webkit](github.com/rogerwang/node-webkit) code. It's simple to get up and running, if you already have virtual or local machine's running the needed operating systems. It will compile snapshots for any node-webkit version above v0.4.2, and automatically download the specified version for compilation and testing - no more manual fixing of 3 seperate vm's when upgrading your app to a new node-webkit version. 
 
-Best of all - **no more broken snapshots** when deploying a new version of your app.
+Best of all, **no more broken snapshots** when deploying a new version of your app.
 
 ## Why does this exist?
 
