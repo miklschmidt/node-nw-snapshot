@@ -6,7 +6,11 @@ Best of all, **no more broken snapshots** when deploying a new version of your a
 
 ## Why does this exist?
 
-My product [Circadio](https://getcircadio.com/) has an autoupdater that will automatically update the application when i publish a new version. I need to protect my source code, so i use snapshots. I distribute Circadio for Windows, OS X and Linux. I started noticing that on almost every deploy, one of my distributions would fail. After looking over my buildscripts, application code and distribution server i couldn't find the source of the problem. What worried me even more, was that on 4 consecutive deploys of the same code, the distribution that failed to run was totally random. One time it would be the Windows distribution, the other it would be the linux32 distribution, and so on. Sometimes everything just worked. I finally traced the source of the problem to the snapshot. It seems that nwsnapshot will sometimes fail silently and generate a snapshot that will cause node-webkit to crash on launch. With no way to prove or prevent this from happening, i set out to create node-nw-snapshot.
+My product [Circadio](https://getcircadio.com/) has an autoupdater that will automatically update the application when i publish a new version. I need to protect my source code, so i use snapshots. I distribute Circadio for Windows, OS X and Linux. 
+
+I started noticing that on almost every deploy, one of my distributions would fail. After looking over my buildscripts, application code and distribution server i couldn't find the source of the problem. What worried me even more, was that on 4 consecutive deploys of the same code, the distribution that failed to run was totally random. One time it would be the Windows distribution, the other it would be the linux32 distribution, and so on. Sometimes everything just worked. 
+
+I finally traced the source of the problem to the snapshot. It seems that nwsnapshot will sometimes fail silently and generate a snapshot that will cause node-webkit to crash on launch. With no way to prove or prevent this from happening, i set out to create node-nw-snapshot.
 
 ## How it works
 
@@ -64,6 +68,8 @@ if (typeof __buildcallbackWrapper === 'function') __buildcallbackWrapper();
 ```
 
 #### Testing
+
+The tests use a minimally modified version of the [frameless-window](https://github.com/zcbenz/nw-sample-apps/tree/master/frameless-window) example from the official node-webkit example applications. 
 
 ```bash
 npm test
