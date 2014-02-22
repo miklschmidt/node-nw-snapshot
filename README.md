@@ -69,6 +69,13 @@ if (typeof __buildcallbackWrapper === 'function') __buildcallbackWrapper();
 
 #### Testing
 
+Start by cloning the repository:
+```bash
+git clone https://github.com/miklschmidt/node-nw-snapshot.git
+cd node-nw-snapshot
+npm install
+```
+
 The tests use a minimally modified version of the [frameless-window](https://github.com/zcbenz/nw-sample-apps/tree/master/frameless-window) example from the official node-webkit example applications. 
 
 ```bash
