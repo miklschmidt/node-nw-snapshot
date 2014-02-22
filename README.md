@@ -28,7 +28,7 @@ In the last case there's a timeout of 10s before the process is terminated and t
 
 ## Security
 
-Since the code you will be snapshotting is probably propriatary (if not, why snapshot?) you probably don't want to pass your code through the internet. node-nw-snapshot uses insecure sockets (based on [Axon](github.com/visionmedia/axon)) to communicate between clients and servers, and your code will be transferred in plain text (for now). You will probably want to keep your servers on the local network (i use VirtualBox). Besides this concern there is no reason your servers couldn't be located remotely, like on Amazon AWS.
+Since the code you will be snapshotting is probably propriatary (if not, why snapshot?) you probably don't want to pass your code across the web. node-nw-snapshot uses insecure sockets (based on [Axon](github.com/visionmedia/axon)) to communicate between clients and servers, and your code will be transferred in plain text (for now). You will probably want to keep your servers on the local network (i use VirtualBox). Besides this concern there is no reason your servers couldn't be located remotely, like on Amazon AWS.
 
 ## Installation
 
