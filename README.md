@@ -1,35 +1,38 @@
-# Introduction
+## Introduction
 
-node-nw-snapshot is a cross platform buildserver and client for compiling and testing v8 snapshots of [node-webkit](github.com/rogerwang/node-webkit) code. It's simple to get up and running, if you already have virtual or local machine's running the needed operating systems. It will compile snapshots for any node-webkit version above v0.4.2, and automatically download the specified version for compilation and testing - no more manual fixing of 3 seperate vm's when upgrading your app to a new node-webkit version. Best of all - no more broken snapshots when deploying a new version of your app.
+node-nw-snapshot is a cross platform buildserver and client for compiling and testing v8 snapshots of [node-webkit](github.com/rogerwang/node-webkit) code. It's simple to get up and running, if you already have virtual or local machine's running the needed operating systems. It will compile snapshots for any node-webkit version above v0.4.2, and automatically download the specified version for compilation and testing - no more manual fixing of 3 seperate vm's when upgrading your app to a new node-webkit version. 
 
-# Why does this exist?
+Best of all - **no more broken snapshots** when deploying a new version of your app.
+
+## Why does this exist?
 
 My product [Circadio](https://getcircadio.com/) has an autoupdater that will automatically update the application when i publish a new version. I need to protect my source code, so i use snapshots. I distribute Circadio for Windows, OS X and Linux. I started noticing that on almost every deploy, one of my distributions would fail. After looking over my buildscripts, application code and distribution server i couldn't find the source of the problem. What worried me even more, was that on 4 consecutive deploys of the same code, the distribution that failed to run was totally random. One time it would be the Windows distribution, the other it would be the linux32 distribution, and so on. Sometimes everything just worked. I finally traced the source of the problem to the snapshot. It seems that nwsnapshot will sometimes fail silently and generate a snapshot that will cause node-webkit to crash on launch. With no way to prove or prevent this from happening, i set out to create node-nw-snapshot.
 
-# How it works
+## How it works
 
 When the server receives a build command, it will download the specified node-webkit version as needed and inject a small test function (9 LOC) into your snapshot code. The app will be launched with an automatically generated ID and the function will test for this id before executing a callback to the snapshot server.
 
 Since the function is located inside the snapshotted code, the app won't request the server if the snapshot is broken. That means you can be 100% certain that your snapshot will run.
 
-# Security
+## Security
 
 Since the code you will be snapshotting is probably propriatary (if not, why snapshot?) you probably don't want to pass your code along the internet. node-nw-snapshot uses unprotected sockets (based on [Axon](github.com/visionmedia/axon)) to communicate between clients and servers, and your code will be distributed in plain text (for now). You will probably want to keep your servers on the local network (i use VirtualBox). Besides this concern there is no reason your servers couldn't be located remotely, like on Amazon AWS.
 
-# Usage
+## Installation
+
+```bash
+npm install nw-snapshot
+```
+
+## Usage
 
 Server:
 
 ```bash
-npm install nw-snapshot
 npm start
 ```
 
 Client:
-
-```bash
-npm install nw-snapshot
-```
 
 in your buildscript:
 ```js
@@ -60,10 +63,9 @@ if (typeof __buildcallbackWrapper === 'function') __buildcallbackWrapper();
 </script>
 ```
 
-##### Testing
+#### Testing
 
 ```bash
-npm install nw-snapshot
 npm test
 ```
 
@@ -92,5 +94,6 @@ linux64 servers will use 3304
 ```
 ##### Snapshot:
 ```
-timeout: 10000ms #time to wait before killing the node-webkit process and fail/try again
+timeout: 10000ms # Time to wait before killing the node-webkit process and fail/try again
 ```
+
