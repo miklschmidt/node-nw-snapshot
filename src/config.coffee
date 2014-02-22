@@ -27,7 +27,7 @@ config.callbackURL = "http://127.0.0.1:#{config.httpPort}/callback"
 
 config.downloadURL = "https://s3.amazonaws.com/node-webkit"
 
-config.sockPort = process.env.npm_package_config_sockport if process.env.npm_package_config_sockport
-config.httpPort = process.env.npm_package_config_httpport if process.env.npm_package_config_httpport
+config.sockPort = process.env.npm_package_config_sockport if process.env.npm_package_config_sockport isnt 'false'
+config.httpPort = process.env.npm_package_config_httpport if process.env.npm_package_config_httpport isnt 'false'
 
 module.exports = config
