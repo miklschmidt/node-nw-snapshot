@@ -114,6 +114,16 @@ win32 servers will use 3302
 linux32 servers will use 3303
 linux64 servers will use 3304
 ```
+
+If you're using `npm start` to start the server, you can override the default socket port by doing:
+```
+npm config set nw-snapshot:sockport 1234
+```
+and the http port:
+```
+npm config set nw-snapshot:httpport 4321
+```
+
 ##### Snapshot:
 ```
 timeout: 10000ms # Time to wait before killing the node-webkit process and fail/try again
