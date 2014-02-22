@@ -4,7 +4,7 @@ node-nw-snapshot is a cross platform buildserver and client for compiling and te
 
 # Why does this exist?
 
-In Circadio, i have an autoupdater that will automatically update the application when i publish a new version. I need to protect my source code, so i use snapshots. I distribute circadio for Windows, OS X and Linux. I started noticing that on almost every deploy, one of my distributions would fail. After looking over my buildscripts, deployscripts, application code and distribution server i couldn't find the source of the problem. What worried me even more, was that on 4 consecutive deploys of the same code, the distribution that failed to run was totally random. One time it would be the Windows distribution, the other it would be the linux32 distribution, and so on. I finally traced the source of the problem to the snapshot. It seems that nwsnapshot will fail silently ALOT. With no way to prove or prevent this from happening, i set out to create node-nw-snapshot.
+In Circadio, i have an autoupdater that will automatically update the application when i publish a new version. I need to protect my source code, so i use snapshots. I distribute Circadio for Windows, OS X and Linux. I started noticing that on almost every deploy, one of my distributions would fail. After looking over my buildscripts, deployscripts, application code and distribution server i couldn't find the source of the problem. What worried me even more, was that on 4 consecutive deploys of the same code, the distribution that failed to run was totally random. One time it would be the Windows distribution, the other it would be the linux32 distribution, and so on. I finally traced the source of the problem to the snapshot. It seems that nwsnapshot will fail silently ALOT. With no way to prove or prevent this from happening, i set out to create node-nw-snapshot.
 
 # How it works
 
@@ -14,30 +14,38 @@ Since the function is located inside the snapshotted code, the app won't request
 
 # Usage
 
-On server(s):
+Server:
 
 ```bash
 npm install nw-snapshot
 npm start
 ```
 
-On client:
+Client:
 
 ```bash
 npm install nw-snapshot
 ```
 
-in you buildscript:
+in your buildscript:
 ```js
 SnapshotClient = require('nw-snapshot').Client;
 var client = new SnapshotClient("0.9.2", appSource, snapshotSource);
 client.connect(3001);
-client.build(1);
+// Run a maximum of 5 iterations.
+client.build(iterations = 5);
 client.on('done', function(snapshot){
 	require('fs').writeFileSync(require('path').join(__dirname, 'snapshot.bin'));
 });
+client.on('progress', function(err, iteration) {
+	// Will run each time an iteration has failed.
+	console.log("Iteration #" + iteration + " failed: " + err);
+});
+client.on('fail', function(err, tries){
+	console.log("Failed to compile snapshot. Tried " + tries + " times.");
+});
 ```
-appSource should be either a `Buffer` of your application zip (app.nw) without the snapshot, or the path to it.
+appSource should be either a `Buffer` of, or the path to, your application zip (app.nw) without the code for the snapshot.
 snapshotSource is the js file that you want to compile into a snapshot.
 
 In your app's main .html file insert this snippet at the bottom of `<body>`:
@@ -54,7 +62,7 @@ npm install nw-snapshot
 npm test
 ```
 
-Wan't to test the ratio at which nwsnapshot will fail?
+Want to test the ratio at which nwsnapshot will fail?
 ```
 ./node_modules/.bin/mocha --compilers coffee:coffee-script/register -R spec test/snapshot.coffee
 ```
@@ -64,18 +72,20 @@ On OSX with 0.8.1, nwsnapshot will make a broken snapshot ~48 out of 100 runs.
 #### Defaults
 
 ##### Server socket ports:
-
+```
 osx servers will use 3001
 win32 servers will use 3002
 linux32 servers will use 3003
 linux64 servers will use 3004
-
+```
 ##### Server http ports:
-
+```
 osx servers will use 3301
 win32 servers will use 3302
 linux32 servers will use 3303
 linux64 servers will use 3304
-
+```
 ##### Snapshot:
-timeout: 10000ms (time to wait before killing the node-webkit process and fail/try again)
+```
+timeout: 10000ms #time to wait before killing the node-webkit process and fail/try again
+```
