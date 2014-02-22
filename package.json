@@ -33,7 +33,7 @@
   "config": {
     "sockport": false,
     "httpport": false
-  }
+  },
   "dependencies": {
     "axon": "~1.0.0",
     "jquery-deferred": "~0.3.0",
