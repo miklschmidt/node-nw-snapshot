@@ -74,6 +74,20 @@ describe "NodeWebkitDownloader", () ->
 			should.exist winErr
 			should.exist osxErr
 
+		# Conditional test.. probably not the best way to handle this..
+		if process.platform.match(/^win/)
+			it 'should throw errors when supplying linux as platform on windows', () ->
+				try
+					downloader = new Downloader '0.8.1', 'linux', 'x64'
+				catch e
+					x64error = e
+				try
+					downloader = new Downloader '0.8.1', 'linux', 'ia32'
+				catch e
+					ia32error = e
+				should.exist x64error
+				should.exist ia32error
+
 	describe "#getDownloadURL", () ->
 		it 'should return a valid download url', (done) ->
 			downloader = new Downloader '0.8.1'
@@ -149,8 +163,11 @@ describe "NodeWebkitDownloader", () ->
 
 		it 'should be able to extract osx-ia32 archive', (done) -> testExtraction('osx', 'ia32').always done
 		it 'should be able to extract win-ia32 archive', (done) -> testExtraction('win', 'ia32').always done
-		it 'should be able to extract linux-ia32 archive', (done) -> testExtraction('linux', 'ia32').always done
-		it 'should be able to extract linux-x64 archive', (done) -> testExtraction('linux', 'x64').always done
+
+		# Conditional test.. probably not the best way to handle this..
+		unless process.platform.match(/^win/)
+			it 'should be able to extract linux-ia32 archive', (done) -> testExtraction('linux', 'ia32').always done
+			it 'should be able to extract linux-x64 archive', (done) -> testExtraction('linux', 'x64').always done
 
 	describe "#ensure", () ->
 
@@ -174,8 +191,10 @@ describe "NodeWebkitDownloader", () ->
 
 		it 'should be able to ensure that a specified version is available for osx-ia32', (done) -> testEnsure('osx', 'ia32').always () -> done()
 		it 'should be able to ensure that a specified version is available for win-ia32', (done) -> testEnsure('win', 'ia32').always () -> done()
-		it 'should be able to ensure that a specified version is available for linux-ia32', (done) -> testEnsure('linux', 'ia32').always () -> done()
-		it 'should be able to ensure that a specified version is available for linux-x64', (done) -> testEnsure('linux', 'x64').always () -> done()
+		# Conditional test.. probably not the best way to handle this..
+		unless process.platform.match(/^win/)
+			it 'should be able to ensure that a specified version is available for linux-ia32', (done) -> testEnsure('linux', 'ia32').always () -> done()
+			it 'should be able to ensure that a specified version is available for linux-x64', (done) -> testEnsure('linux', 'x64').always () -> done()
 
 
 	describe "#cleanVersionDirectoryForPlatform", () ->
