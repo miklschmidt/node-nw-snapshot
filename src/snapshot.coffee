@@ -192,6 +192,9 @@ module.exports =
 					url = "#{Config.callbackURL}/#{@id}"
 					script = document.createElement('script');
 					script.src = url;
+					script.onload = function(){
+						process.exit();
+					};
 					document.querySelector('body').appendChild(script);
 				}
 			}
@@ -355,8 +358,24 @@ module.exports =
 	notify: (id) ->
 		if @id is id
 			@didNotify = yes
-			@process.kill()
+			@killProcess()
 		true
+
+	killProcess: () ->
+		if Config.platform is 'win'
+			# It seems impossible to kill nw.exe processes on windows.
+			# Hit it with all we've got!
+			# youtube.com/watch?v=74BzSTQCI_c
+			exec "taskkill /pid #{@process.pid} /f"
+			try
+				@process.kill('SIGKILL')
+				@process.kill('SIGTERM')
+				@process.kill('SIGHUP')
+				@process.kill()
+				@process.exit()
+			catch
+		else
+			@process.kill()
 
 	###
 	# Launces the app with the compiled snapshot. 
@@ -379,7 +398,7 @@ module.exports =
 
 		# Set a timeout, we don't want to wait for the application forever.
 		@execTimeout = setTimeout () =>
-			@process.kill()
+			@killProcess()
 			@launchDeferred.rejectWith @, [new Error("Timeout in testing after #{Config.timeout}ms.")]
 		, Config.timeout
 
@@ -458,6 +477,6 @@ module.exports =
 			when STATE_TESTING
 				@launchDeferred.always @resetStateAndResolve
 				# Kill the app to speed the process along.
-				@process.kill()
+				@killProcess()
 
 		@abortDeferred.promise()
