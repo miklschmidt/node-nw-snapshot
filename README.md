@@ -63,7 +63,7 @@ client.connect(3001, function(){
 		console.log("Failed to compile snapshot. Tried " + tries + " times.");
 	});
 	// Run a maximum of 5 iterations.
-	client.build(iterations = 5);
+	client.build(5);
 });
 
 ```
