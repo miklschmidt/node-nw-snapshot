@@ -51,19 +51,21 @@ in your buildscript:
 SnapshotClient = require('nw-snapshot').Client;
 var client = new SnapshotClient("0.9.2", appSource, snapshotSource);
 // Connect to tcp://127.0.0.1:3001
-client.connect(3001);
-// Run a maximum of 5 iterations.
-client.build(iterations = 5);
-client.on('done', function(snapshot){
-	require('fs').writeFileSync(require('path').join(__dirname, 'snapshot.bin'));
+client.connect(3001, function(){
+	client.on('done', function(snapshot){
+		require('fs').writeFileSync(require('path').join(__dirname, 'snapshot.bin'));
+	});
+	client.on('progress', function(err, iteration) {
+		// Will run each time an iteration has failed.
+		console.log("Iteration #" + iteration + " failed: " + err);
+	});
+	client.on('fail', function(err, tries){
+		console.log("Failed to compile snapshot. Tried " + tries + " times.");
+	});
+	// Run a maximum of 5 iterations.
+	client.build(iterations = 5);
 });
-client.on('progress', function(err, iteration) {
-	// Will run each time an iteration has failed.
-	console.log("Iteration #" + iteration + " failed: " + err);
-});
-client.on('fail', function(err, tries){
-	console.log("Failed to compile snapshot. Tried " + tries + " times.");
-});
+
 ```
 appSource should be either a `Buffer` of, or the path to, your application zip (app.nw) without the code for the snapshot.
 snapshotSource is the js file that you want to compile into a snapshot.
