@@ -132,7 +132,7 @@ timeout: 10000ms # Time to wait before killing the node-webkit process and fail/
 
 ## Cool stuff
 
-node-nw-snapshot comes with a downloader for downloading and extract a specific version of node-webkit. You can use this class in your buildscript for automatically running your app in the version of you choosing. Here's an example using gulp:
+node-nw-snapshot comes with a downloader for downloading and extracting a specific version of node-webkit. You can use this class in your buildscript for automatically running your app in the version of you choosing. Here's an example using gulp:
 
 ```javascript
 var exec = require('child_process').exec;
