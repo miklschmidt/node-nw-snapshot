@@ -140,7 +140,7 @@ var NodeWebkitDownloader = require('nw-snapshot').Downloader;
 var gulp = require('gulp');
 var gutil = require('gulp-util');
 
-task('run', ['insert-name-of-compile-task-here'], function(callback){
+gulp.task('run', ['insert-name-of-compile-task-here'], function(callback){
 
 	var version = gutil.env.nw || '0.9.2';
 	downloader = new NodeWebkitDownloader(version);
