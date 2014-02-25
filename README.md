@@ -130,3 +130,37 @@ npm config set nw-snapshot:httpport 4321
 timeout: 10000ms # Time to wait before killing the node-webkit process and fail/try again
 ```
 
+## Cool stuff
+
+node-nw-snapshot comes with a downloader for downloading and extract a specific version of node-webkit. You can use this class in your buildscript for automatically running your app in the version of you choosing. Here's an example using gulp:
+
+```javascript
+var exec = require('child_process').exec;
+var NodeWebkitDownloader = require('nw-snapshot').Downloader;
+var gulp = require('gulp');
+var gutil = require('gulp-util');
+
+task('run', ['insert-name-of-compile-task-here'], function(callback){
+
+	var version = gutil.env.nw || '0.9.2';
+	downloader = new NodeWebkitDownloader(version);
+	downloader.ensure()
+	.done(function(snapshotBin, nwBin){
+		appProcess = exec(nwBin + " " + path_to_you_app_folder);
+		appProcess.stdout.pipe(process.stdout);
+		appProcess.stderr.pipe(process.stderr);
+		appProcess.on('exit', function(){ callback(); });
+	}).fail(function(err){
+		callback(err);
+	});
+
+});
+```
+
+Now from the command line you can do:
+
+```bash
+gulp run --nw 0.8.2
+```
+
+And magic will happen!
