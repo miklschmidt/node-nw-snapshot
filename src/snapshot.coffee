@@ -281,7 +281,7 @@ module.exports =
 		.done () ->
 			# Snapshot test passed, clean up!
 			# Read the snapshot into a buffer
-			fileBuffer = fs.readFileSync @outputFilePath, 'binary'
+			fileBuffer = fs.readFileSync @outputFilePath
 			@cleanupTest().always () ->
 				# Resolve the deferred, we were succesful!
 				@runDeferred.resolveWith @, [fileBuffer, @tries]
