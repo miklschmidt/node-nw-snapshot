@@ -16,7 +16,7 @@ gulp.task 'test', ['compile'], ->
 	gulp.src './test/setup.coffee'
 	.pipe mocha reporter: 'spec'
 
-gulp.task 'prepublish', ['compile', 'test'], ->
+gulp.task 'prepublish', ['compile'], ->
 
 gulp.task 'test-nwsnapshot', ['compile'], ->
 	gulp.src './test/nwsnapshot.coffee'
