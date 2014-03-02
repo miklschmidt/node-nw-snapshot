@@ -28,8 +28,8 @@ describe "nwsnapshot binary", () ->
 		fixtures.app = fs.readFileSync (path.join __dirname, 'fixtures', 'app.zip')
 		fixtures.snapshotSource = fs.readFileSync (path.join __dirname, 'fixtures', 'snapshot.js')
 		Server.start()
-		client = new Client '0.8.1', fixtures.app, fixtures.snapshotSource
-		client.connect Config.sockPort, done
+		client = new Client '0.9.2', fixtures.app, fixtures.snapshotSource
+		client.connect "tcp://#{Config.hostIP}:#{Config.sockPort}", done
 
 	after () ->
 		client.disconnect()

@@ -36,7 +36,7 @@ module.exports =
 			.always () ->
 				Snapshot.resetState()
 
-		@socket.bind("tcp://127.0.0.1:#{Config.sockPort}")
+		@socket.bind("tcp://#{Config.hostIP}:#{Config.sockPort}")
 
 		@app = express()
 

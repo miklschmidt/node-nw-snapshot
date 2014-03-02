@@ -44,7 +44,8 @@
     "request": "~2.33.0",
     "decompress-zip": "0.0.4",
     "tar": "~0.1.19",
-    "express": "~3.4.8"
+    "express": "~3.4.8",
+    "glob": "^3.2.9"
   },
   "devDependencies": {
     "gulp-coffee": "^1.4.1",

@@ -48,7 +48,7 @@ describe "Snapshot", () ->
 			failCalled = false
 			doneCalled = false
 			Snapshot.config
-				nwVersion: '0.8.1'
+				nwVersion: '0.9.2'
 				appSourceNw: fixtures.app
 				snapshotSource: fixtures.snapshotSource
 				iterations: fixtures.iterations

@@ -30,8 +30,8 @@ describe "Client / Server", () ->
 		fixtures.app = fs.readFileSync (path.join __dirname, 'fixtures', 'app.zip')
 		fixtures.snapshotSource = fs.readFileSync (path.join __dirname, 'fixtures', 'snapshot.js')
 		Server.start()
-		client = new Client '0.8.1', fixtures.app, fixtures.snapshotSource
-		client.connect Config.sockPort, done
+		client = new Client '0.9.2', fixtures.app, fixtures.snapshotSource
+		client.connect "tcp://#{Config.hostIP}:#{Config.sockPort}", done
 
 	after () ->
 		client.disconnect()
@@ -46,7 +46,7 @@ describe "Client / Server", () ->
 			oldConfig = Snapshot.config
 			oldPrepare = Snapshot.prepare
 			Snapshot.config = (opts) ->
-				opts.nwVersion.should.be.equal '0.8.1'
+				opts.nwVersion.should.be.equal '0.9.2'
 				opts.appSourceNw.length.should.be.equal fixtures.app.length
 				opts.snapshotSource.length.should.be.equal fixtures.snapshotSource.length
 			Snapshot.prepare = () ->

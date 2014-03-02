@@ -11,6 +11,7 @@ dfd        = require('jquery-deferred').Deferred
 mkdirp     = require 'mkdirp'
 rimraf     = require 'rimraf'
 fs         = require 'fs'
+glob       = require 'glob'
 
 ###
 # States
@@ -333,9 +334,17 @@ module.exports =
 
 		# Delete the test directory and all its content.
 		rimraf @testdir, (err) =>
-			return if @cleanupDeferred.rejectWith @, [err] if err
-			@cleanupDeferred.resolveWith @ 
-		
+			return @cleanupDeferred.rejectWith @, [err] if err
+
+			glob "**/*v8.log", (err, files) =>
+				return @cleanupDeferred.rejectWith @, [err] if err
+				for file in files
+					try
+						fs.unlinkSync file
+					catch e
+						return @cleanupDeferred.rejectWith @, [e]
+				@cleanupDeferred.resolveWith @
+
 		@cleanupDeferred.promise()
 
 	###
