@@ -1,6 +1,6 @@
 {
   "name": "nw-snapshot",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "description": "Tools for compiling and testing v8 snapshots of node-webkit applications",
   "main": "index",
   "keywords": [
