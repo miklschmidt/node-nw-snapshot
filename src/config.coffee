@@ -1,7 +1,5 @@
 config = {}
-# You need to override this to be your public IP if you need
-# the server to be remotely accessible. Even on your LAN.
-config.hostIP = '127.0.0.1'
+config.hostIP = '0.0.0.0'
 if process.platform.match(/^darwin/) 
 	config.platform = 'osx'
 	config.arch = 'ia32'
@@ -34,7 +32,5 @@ if process.env.npm_package_config_sockport and process.env.npm_package_config_so
 	config.sockPort = process.env.npm_package_config_sockport 
 if process.env.npm_package_config_httpport and process.env.npm_package_config_httpport isnt 'false'
 	config.httpPort = process.env.npm_package_config_httpport 
-if process.env.npm_package_config_hostip and process.env.npm_package_config_hostip isnt 'false'
-	config.hostIP = process.env.npm_package_config_hostip 
 
 module.exports = config

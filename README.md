@@ -125,11 +125,6 @@ and the http port:
 npm config set nw-snapshot:httpport 4321
 ```
 
-If you want your server to be available outside the machine it's running on, you need to bind the public ip address. You can do that with npm like this:
-```
-npm config set nw-snapshot:hostip 192.168.0.255
-```
-
 ##### Snapshot:
 ```
 timeout: 10000ms # Time to wait before killing the node-webkit process and fail/try again
