@@ -53,7 +53,7 @@ var client = new SnapshotClient("0.9.2", appSource, snapshotSource);
 // Connect to tcp://127.0.0.1:3001
 client.connect(3001, function(){
 	client.on('done', function(snapshot){
-		require('fs').writeFileSync(require('path').join(__dirname, 'snapshot.bin'));
+		require('fs').writeFileSync(require('path').join(__dirname, 'snapshot.bin'), snapshot);
 	});
 	client.on('progress', function(err, iteration) {
 		// Will run each time an iteration has failed.
@@ -149,10 +149,8 @@ gulp.task('run', ['insert-name-of-compile-task-here'], function(callback){
 		appProcess = exec(nwBin + " " + path_to_you_app_folder);
 		appProcess.stdout.pipe(process.stdout);
 		appProcess.stderr.pipe(process.stderr);
-		appProcess.on('exit', function(){ callback(); });
-	}).fail(function(err){
-		callback(err);
-	});
+		appProcess.on('exit', callback);
+	}).fail(callback);
 
 });
 ```
