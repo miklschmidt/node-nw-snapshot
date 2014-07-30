@@ -48,7 +48,7 @@ describe "Snapshot", () ->
 			failCalled = false
 			doneCalled = false
 			Snapshot.config
-				nwVersion: '0.10.0'
+				nwVersion: '0.9.2'
 				appSourceNw: fixtures.app
 				snapshotSource: fixtures.snapshotSource
 				iterations: fixtures.iterations
@@ -204,6 +204,7 @@ describe "Snapshot", () ->
 	describe "#run", () ->
 
 		it "should iterate and notify", (done) ->
+			this.timeout(10000)
 			# Set the timeout to be ridiculously low, so we fail pretty much instantly.
 			oldTimeout = Config.timeout
 			Config.timeout = 1

@@ -14,7 +14,7 @@ path                     = require 'path'
 fixtures =
 	app: null
 	snapshotSource: null
-	iterations: 1
+	iterations: 50
 
 ###
 # Tests
@@ -28,7 +28,7 @@ describe "nwsnapshot binary", () ->
 		fixtures.app = fs.readFileSync (path.join __dirname, 'fixtures', 'app.zip')
 		fixtures.snapshotSource = fs.readFileSync (path.join __dirname, 'fixtures', 'snapshot.js')
 		Server.start()
-		client = new Client '0.10.0', fixtures.app, fixtures.snapshotSource
+		client = new Client '0.9.2', fixtures.app, fixtures.snapshotSource
 		client.connect "tcp://#{Config.hostIP}:#{Config.sockPort}", done
 
 	after () ->
@@ -38,7 +38,7 @@ describe "nwsnapshot binary", () ->
 	this.timeout(1000 * 60 * 10) # 10 minutes
 
 	it "Should compile a valid snapshot each time (test nwsnapshotter)", (done) ->
-		n = 1
+		n = fixtures.iterations
 		fails = 0
 		wins = 0
 		final = () ->
