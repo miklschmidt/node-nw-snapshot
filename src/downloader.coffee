@@ -63,6 +63,22 @@ module.exports = class NodeWebkitDownloader
 		path.join __dirname, '..', @binFolder, @version, "#{@platform}-#{@arch}"
 
 	###
+	# Returns the subfolder of the zip where the files are located, if it exists.
+	# In 0.10.0 node-webkit switched their win and osx zip structure to match the linux ones.
+	#
+	# @return {String}
+	# @api public
+	###
+	getZipSubFolder: () ->
+		frags = @version.split('.')
+		major = parseInt frags[0]
+		minor = parseInt frags[1]
+		if @platform is 'linux' or (major is 0 and minor > 9) or (major > 0) 
+			"node-webkit-v#{@version}-#{@platform}-#{@arch}" 
+		else 
+			""
+
+	###
 	# Returns the local path to the snapshot binary.
 	# NOTE: The binary might not exist, see verifyBinaries().
 	#
@@ -71,7 +87,7 @@ module.exports = class NodeWebkitDownloader
 	###
 	getSnapshotBin: () ->
 		snapshotExecutable = if @platform is 'win' then 'nwsnapshot.exe' else 'nwsnapshot'
-		folder = if @platform is 'linux' then "node-webkit-v#{@version}-#{@platform}-#{@arch}" else ""
+		folder = @getZipSubFolder()
 		path.join @getLocalPath(), folder, snapshotExecutable
 
 	###
@@ -82,13 +98,14 @@ module.exports = class NodeWebkitDownloader
 	# @api public
 	###
 	getNwBin: () ->
+		folder = @getZipSubFolder()
 		switch @platform
 			when 'win'
-				path.join @getLocalPath(), 'nw.exe'
+				path.join @getLocalPath(), folder, 'nw.exe'
 			when 'osx'
-				path.join @getLocalPath(), 'node-webkit.app', 'Contents', 'MacOS', 'node-webkit'
+				path.join @getLocalPath(), folder, 'node-webkit.app', 'Contents', 'MacOS', 'node-webkit'
 			when 'linux'
-				path.join @getLocalPath(), "node-webkit-v#{@version}-#{@platform}-#{@arch}", 'nw'
+				path.join @getLocalPath(), folder, 'nw'
 
 	###
 	# Downloads the node-webkit archive.
