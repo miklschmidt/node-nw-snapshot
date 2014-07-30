@@ -26,7 +26,7 @@ else
 config.timeout = 10000 # ms before giving up and failing the test
 config.callbackURL = "http://127.0.0.1:#{config.httpPort}/callback"
 
-config.downloadURL = "http://dl.node-webkit.org/"
+config.downloadURL = "https://s3.amazonaws.com/node-webkit"
 
 if process.env.npm_package_config_sockport and process.env.npm_package_config_sockport isnt 'false'
 	config.sockPort = process.env.npm_package_config_sockport 
