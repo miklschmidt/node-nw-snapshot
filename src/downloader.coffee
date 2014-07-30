@@ -70,7 +70,8 @@ module.exports = class NodeWebkitDownloader
 	# @api public
 	###
 	getZipSubFolder: () ->
-		frags = @version.split('.')
+		# Split on '-' to get rid of "rc" part if present.
+		frags = @version.split('-')[0].split('.')
 		major = parseInt frags[0]
 		minor = parseInt frags[1]
 		if @platform is 'linux' or (major is 0 and minor > 9) or (major > 0) 
