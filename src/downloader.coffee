@@ -50,7 +50,16 @@ module.exports = class NodeWebkitDownloader
 	###
 	getDownloadURL: () ->
 		extension = if @platform is 'linux' then 'tar.gz' else 'zip'
-		"#{Config.downloadURL}/v#{@version}/node-webkit-v#{@version}-#{@platform}-#{@arch}.#{extension}"
+
+		# Use old download url if version is < 0.8.0
+		frags = @version.split('-')[0].split('.')
+		major = parseInt frags[0]
+		minor = parseInt frags[1]
+		if major is 0 and minor < 8
+			return "#{Config.oldDownloadURL}/v#{@version}/node-webkit-v#{@version}-#{@platform}-#{@arch}.#{extension}"
+		else
+			return "#{Config.newDownloadURL}/v#{@version}/node-webkit-v#{@version}-#{@platform}-#{@arch}.#{extension}"
+
 
 	###
 	# Returns the local path to the directory where the node-webkit 
