@@ -54,6 +54,8 @@ var client = new SnapshotClient("0.9.2", appSource, snapshotSource);
 client.connect(3001, function(){
 	client.on('done', function(snapshot){
 		require('fs').writeFileSync(require('path').join(__dirname, 'snapshot.bin'), snapshot);
+		console.log("Done compiling snapshot.");
+		client.disconnect();
 	});
 	client.on('progress', function(err, iteration) {
 		// Will run each time an iteration has failed.
