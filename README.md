@@ -107,7 +107,7 @@ gulp test-nwsnapshot
 
 On OSX with v0.8.1, nwsnapshot will produce a broken snapshot ~40 out of 100 runs.
 
-#### <a name="tith"></a> Defaults
+#### <a name="defaults"></a> Defaults
 
 ##### Server socket ports:
 
