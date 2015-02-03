@@ -106,17 +106,30 @@ On OSX with v0.8.1, nwsnapshot will produce a broken snapshot ~40 out of 100 run
 
 ##### Server socket ports:
 
-* osx servers will use 3001
-* win32 servers will use 3002
-* linux32 servers will use 3003
-* linux64 servers will use 3004
+* osx32 servers will use 3001
+* osx64 servers will use 3002
+* win32 servers will use 3011
+* win64 servers will use 3012
+* linux32 servers will use 3021
+* linux64 servers will use 3022
 
 ##### Server http ports:
 
-* osx servers will use 3301
-* win32 servers will use 3302
-* linux32 servers will use 3303
-* linux64 servers will use 3304
+* osx32 servers will use 3301
+* osx64 servers will use 3302
+* win32 servers will use 3311
+* win64 servers will use 3312
+* linux32 servers will use 3321
+* linux64 servers will use 3322
+
+###### Configuration
+
+If you're starting the server with `node server.js` or similar you can provide commandline arguments to override the http port, the socket port, and the platform architecture to compile for.
+```
+node server.js --arch ia32 --httpport 1234 --sockport 4321
+node server.js --arch x64
+node server.js --sockport 4321
+```
 
 If you're using `npm start` to start the server, you can override the default socket port by doing:
 ```
@@ -125,6 +138,10 @@ npm config set nw-snapshot:sockport 1234
 and the http port:
 ```
 npm config set nw-snapshot:httpport 4321
+```
+and the platform architecture to compile for:
+```
+npm config set nw-snapshot:arch ia32
 ```
 
 ##### Snapshot:

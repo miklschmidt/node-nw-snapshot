@@ -18,7 +18,7 @@ fixtures =
 	snapshotSource: null
 	iterations: 1
 
-nwVersion = '0.9.2'
+nwVersion = '0.11.5'
 
 ###
 # Tests
@@ -33,7 +33,7 @@ describe "Client / Server", () ->
 		fixtures.snapshotSource = fs.readFileSync (path.join __dirname, 'fixtures', 'snapshot.js')
 		Server.start()
 		client = new Client nwVersion, fixtures.app, fixtures.snapshotSource
-		client.connect "tcp://#{Config.hostIP}:#{Config.sockPort}", done
+		client.connect "tcp://127.0.0.1:#{Config.sockPort}", done
 
 	after () ->
 		client.disconnect()
@@ -81,7 +81,7 @@ describe "Client / Server", () ->
 	describe "all", () ->
 		this.timeout(120000)
 		it "should do everything (stupid catch all test)", (done) ->
-			client.build 1
+			client.build 5
 			# client.on 'progress', (status, tries) -> console.log 'progress:', status, tries
 			client.on 'fail', (err, tries) -> 
 				# console.log 'fail:', err, tries

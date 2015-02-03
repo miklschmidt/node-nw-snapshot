@@ -13,7 +13,7 @@ path         = require 'path'
 ###
 
 binFolder    = 'test_bin'
-nwVersion    = '0.9.2'
+nwVersion    = '0.11.5'
 
 ###
 # Tests
@@ -23,7 +23,11 @@ describe "NodeWebkitDownloader", () ->
 
 	after (done) ->
 		rimraf path.join(__dirname, '..', binFolder), (err) ->
-			throw err if err
+			# See https://github.com/miklschmidt/node-nw-snapshot/issues/1
+			if err and process.platform.match(/^win/)
+				return done() # Yea... well.. it doesn't work here..
+			else if err 
+				throw err
 			done()
 
 	before (done) ->
@@ -50,8 +54,8 @@ describe "NodeWebkitDownloader", () ->
 				platform = 'win'
 			else
 				platform = 'linux'
-			if platform in ['osx', 'win']
-				arch = 'ia32'
+
+			arch = process.arch
 
 			downloader.platform.should.equal platform
 			downloader.arch.should.equal arch
@@ -62,18 +66,6 @@ describe "NodeWebkitDownloader", () ->
 			catch e
 				err = e
 			should.exist err
-
-		it 'should throw errors when supplied unsupported platform and arch combination', () ->
-			try
-				downloader = new Downloader nwVersion, 'win', 'x64'
-			catch e
-				winErr = e
-			try
-				downloader = new Downloader nwVersion, 'osx', 'x64'
-			catch e
-				osxErr = e
-			should.exist winErr
-			should.exist osxErr
 
 		# Conditional test.. probably not the best way to handle this..
 		if process.platform.match(/^win/)

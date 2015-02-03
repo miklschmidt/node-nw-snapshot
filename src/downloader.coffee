@@ -37,8 +37,6 @@ module.exports = class NodeWebkitDownloader
 			throw new Error "Platform must be one of 'osx', 'linux' or 'win'"
 		unless @arch in ['ia32', 'x64']
 			throw new Error "Arch must be one of 'ia32' or 'x64'"
-		if @platform in ['win', 'osx'] and @arch isnt 'ia32'
-			throw new Error "Only ia32 is supported on osx and windows"
 		if Config.platform is 'win' and @platform is 'linux'
 			throw new Error "Extracting for linux on windows is unsupported at the moment. See: https://github.com/miklschmidt/node-nw-snapshot/issues/3"
 
