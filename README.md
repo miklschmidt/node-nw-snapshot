@@ -1,3 +1,8 @@
+Latest version: 0.2.0
+
+## NOTE: Upgrading from 0.1.x to 0.2.x
+The default ports have changed to make room for x64 on osx and windows. See [defaults](#defaults)
+
 ## Introduction
 
 node-nw-snapshot is a cross platform buildserver and client for compiling and testing v8 snapshots of [node-webkit](github.com/rogerwang/node-webkit) code. It's simple to get up and running, if you already have virtual or local machine's running the needed operating systems. It will compile snapshots for any node-webkit version above v0.4.2, and automatically download the specified version for compilation and testing - no more manual fixing of 3 seperate vm's when upgrading your app to a new node-webkit version. 
@@ -102,7 +107,7 @@ gulp test-nwsnapshot
 
 On OSX with v0.8.1, nwsnapshot will produce a broken snapshot ~40 out of 100 runs.
 
-#### Defaults
+#### <a name="tith"></a> Defaults
 
 ##### Server socket ports:
 
