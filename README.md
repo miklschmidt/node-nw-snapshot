@@ -1,4 +1,4 @@
-Latest version: 0.2.0
+Latest version: 0.2.1
 
 ## NOTE: Upgrading from 0.1.x to 0.2.x
 The default ports have changed to make room for x64 on osx and windows. See [defaults](#defaults)
