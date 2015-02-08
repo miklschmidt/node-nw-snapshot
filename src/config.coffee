@@ -33,10 +33,10 @@ else
 	# Socket port
 	if args.sockport
 		config.sockPort = args.sockport
-		console.log "Using socket port from CLI args: #{config.arch}"
+		console.log "Using socket port from CLI args: #{config.sockPort}"
 	else if process.env.npm_package_config_sockport and process.env.npm_package_config_sockport isnt 'false'
-		config.sockPort = args.sockport
-		console.log "Using socket port from npm package configuration: #{config.arch}"
+		config.sockPort = process.env.npm_package_config_sockport
+		console.log "Using socket port from npm package configuration: #{config.sockPort}"
 	else
 		if config.arch is 'ia32'
 			config.sockPort = 3001 + portOffset
@@ -46,10 +46,10 @@ else
 	# Http port
 	if args.httpport
 		config.httpPort = args.httpport
-		console.log "Using socket port from CLI args: #{config.arch}"
+		console.log "Using socket port from CLI args: #{config.httpPort}"
 	else if process.env.npm_package_config_httpport and process.env.npm_package_config_httpport isnt 'false'
-		config.httpPort = args.httpport
-		console.log "Using socket port from npm package configuration: #{config.arch}"
+		config.httpPort = process.env.npm_package_config_httpport
+		console.log "Using socket port from npm package configuration: #{config.httpPort}"
 	else
 		if config.arch is 'ia32'
 			config.httpPort = 3301 + portOffset
@@ -63,12 +63,5 @@ config.callbackURL = "http://127.0.0.1:#{config.httpPort}/callback"
 
 config.oldDownloadURL = "https://s3.amazonaws.com/node-webkit"
 config.newDownloadURL = "http://dl.node-webkit.org/"
-
-if process.env.npm_package_config_sockport and process.env.npm_package_config_sockport isnt 'false'
-	config.sockPort = process.env.npm_package_config_sockport 
-	console.log 'Using socket port from npm package configuration: #{config.sockPort}'
-if process.env.npm_package_config_httpport and process.env.npm_package_config_httpport isnt 'false'
-	config.httpPort = process.env.npm_package_config_httpport 
-	console.log 'Using http port from npm package configuration: #{config.httpPort}'
 
 module.exports = config
