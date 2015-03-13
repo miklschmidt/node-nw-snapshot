@@ -62,6 +62,7 @@ config.timeout = 10000 # ms before giving up and failing the test
 config.callbackURL = "http://127.0.0.1:#{config.httpPort}/callback"
 
 config.oldDownloadURL = "https://s3.amazonaws.com/node-webkit"
-config.newDownloadURL = "http://dl.node-webkit.org/"
+config.newDownloadURL = "http://dl.node-webkit.org"
+config.nwjsDownloadUrl = "http://dl.nwjs.io"
 
 module.exports = config

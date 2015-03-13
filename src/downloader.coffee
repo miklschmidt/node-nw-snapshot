@@ -50,13 +50,13 @@ module.exports = class NodeWebkitDownloader
 		extension = if @platform is 'linux' then 'tar.gz' else 'zip'
 
 		# Use old download url if version is < 0.8.0
-		frags = @version.split('-')[0].split('.')
-		major = parseInt frags[0]
-		minor = parseInt frags[1]
+		{major, minor} = @parseVersion()
 		if major is 0 and minor < 8
 			return "#{Config.oldDownloadURL}/v#{@version}/node-webkit-v#{@version}-#{@platform}-#{@arch}.#{extension}"
-		else
+		else if major is 0 and minor < 12
 			return "#{Config.newDownloadURL}/v#{@version}/node-webkit-v#{@version}-#{@platform}-#{@arch}.#{extension}"
+		else
+			return "#{Config.nwjsDownloadUrl}/v#{@version}/nwjs-v#{@version}-#{@platform}-#{@arch}.#{extension}"
 
 
 	###
@@ -78,13 +78,26 @@ module.exports = class NodeWebkitDownloader
 	###
 	getZipSubFolder: () ->
 		# Split on '-' to get rid of "rc" part if present.
+		{major, minor} = @parseVersion()
+		if @platform is 'linux' or (major is 0 and minor > 9) or (major > 0) 
+			if @isNwjs()
+				"nwjs-v#{@version}-#{@platform}-#{@arch}"
+			else
+				"node-webkit-v#{@version}-#{@platform}-#{@arch}"
+		else 
+			""
+
+	parseVersion: () ->
+		# Split on '-' to get rid of "rc" part if present.
 		frags = @version.split('-')[0].split('.')
 		major = parseInt frags[0]
 		minor = parseInt frags[1]
-		if @platform is 'linux' or (major is 0 and minor > 9) or (major > 0) 
-			"node-webkit-v#{@version}-#{@platform}-#{@arch}" 
-		else 
-			""
+		patch = parseInt frags[2]
+		return {major, minor, patch}
+
+	isNwjs: () ->
+		{major, minor} = @parseVersion()
+		(major is 0 and minor >= 12) or major > 0
 
 	###
 	# Returns the local path to the snapshot binary.
@@ -94,7 +107,18 @@ module.exports = class NodeWebkitDownloader
 	# @api public
 	###
 	getSnapshotBin: () ->
-		snapshotExecutable = if @platform is 'win' then 'nwsnapshot.exe' else 'nwsnapshot'
+		snapshotExecutable = if @isNwjs()
+			if @platform is 'win'
+				'nwjc.exe'
+			else
+				'nwjc'
+		else
+			if @platform is 'win'
+				'nwsnapshot.exe'
+			else
+				'nwsnapshot'
+		
+
 		folder = @getZipSubFolder()
 		path.join @getLocalPath(), folder, snapshotExecutable
 
@@ -111,7 +135,10 @@ module.exports = class NodeWebkitDownloader
 			when 'win'
 				path.join @getLocalPath(), folder, 'nw.exe'
 			when 'osx'
-				path.join @getLocalPath(), folder, 'node-webkit.app', 'Contents', 'MacOS', 'node-webkit'
+				if @isNwjs()
+					path.join @getLocalPath(), folder, 'nwjs.app', 'Contents', 'MacOS', 'nwjs'
+				else
+					path.join @getLocalPath(), folder, 'node-webkit.app', 'Contents', 'MacOS', 'node-webkit'
 			when 'linux'
 				path.join @getLocalPath(), folder, 'nw'
 
@@ -158,13 +185,10 @@ module.exports = class NodeWebkitDownloader
 				# if the server responded with 404.
 				req.on 'response', (response) =>
 					if response.statusCode isnt 200
-						destinationStream.end()
-						rimraf @getLocalPath(), (err) =>
-							downloadDeferred.rejectWith @, [err] if err
-							downloadDeferred.rejectWith @, [
-								new Error("Bad response (code #{response.statusCode}. 
-								           The version you requested (#{@version}) probably doesn't exist.")
-							]
+						downloadDeferred.rejectWith @, [
+							new Error("Bad response (#{response.statusCode}). 
+							           The version you requested (#{@version}) probably doesn't exist.")
+						]
 				# Pipe the request data to the local file
 				req.pipe destinationStream
 

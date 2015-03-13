@@ -13,7 +13,7 @@ path         = require 'path'
 ###
 
 binFolder    = 'test_bin'
-nwVersion    = '0.11.5'
+nwVersion    = '0.12.0'
 
 ###
 # Tests

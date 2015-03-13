@@ -207,6 +207,18 @@ module.exports =
 
 		@patchDeferred.promise()
 	
+	parseVersion: () ->
+		# Split on '-' to get rid of "rc" part if present.
+		frags = @nwVersion.split('-')[0].split('.')
+		major = parseInt frags[0]
+		minor = parseInt frags[1]
+		patch = parseInt frags[2]
+		return {major, minor, patch}
+
+	isNwjs: () ->
+		{major, minor} = @parseVersion()
+		(major is 0 and minor >= 12) or major > 0
+
 	###
 	# Compiles the snapshot.
 	#
@@ -223,7 +235,11 @@ module.exports =
 		# Compile the snapshot
 		@patchSource()
 		.done () ->
-			exec "#{@snapshotterPath} --extra_code #{path.join @testdir, 'snapshot.js'} #{@outputFilePath}", (err) =>
+			if @isNwjs()
+				cmd = "#{@snapshotterPath} #{path.join @testdir, 'snapshot.js'} #{@outputFilePath}"
+			else
+				cmd = "#{@snapshotterPath} --extra_code #{path.join @testdir, 'snapshot.js'} #{@outputFilePath}"
+			exec cmd, (err) =>
 				if @checkState(@buildDeferred, STATE_BUILDING, err)
 					# Copy the snapshot to the test dir
 					fs.readFile @outputFilePath, 'binary', (err, data) =>
