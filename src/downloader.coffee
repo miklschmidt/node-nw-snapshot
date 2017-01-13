@@ -37,6 +37,10 @@ module.exports = class NodeWebkitDownloader
 			throw new Error "Platform must be one of 'osx', 'linux' or 'win'"
 		unless @arch in ['ia32', 'x64']
 			throw new Error "Arch must be one of 'ia32' or 'x64'"
+		{major, minor} = @parseVersion()
+		if major > 12 and @platform is 'osx' and @arch isnt 'x64'
+			throw new Error "Only x64 is supported for osx from nw v0.13.x and onwards"
+
 		if Config.platform is 'win' and @platform is 'linux'
 			throw new Error "Extracting for linux on windows is unsupported at the moment. See: https://github.com/miklschmidt/node-nw-snapshot/issues/3"
 
@@ -56,7 +60,7 @@ module.exports = class NodeWebkitDownloader
 		else if major is 0 and minor < 12
 			return "#{Config.newDownloadURL}/v#{@version}/node-webkit-v#{@version}-#{@platform}-#{@arch}.#{extension}"
 		else
-			return "#{Config.nwjsDownloadUrl}/v#{@version}/nwjs-v#{@version}-#{@platform}-#{@arch}.#{extension}"
+			return "#{Config.nwjsDownloadUrl}/v#{@version}/nwjs-sdk-v#{@version}-#{@platform}-#{@arch}.#{extension}"
 
 
 	###
@@ -81,7 +85,7 @@ module.exports = class NodeWebkitDownloader
 		{major, minor} = @parseVersion()
 		if @platform is 'linux' or (major is 0 and minor > 9) or (major > 0) 
 			if @isNwjs()
-				"nwjs-v#{@version}-#{@platform}-#{@arch}"
+				"nwjs-sdk-v#{@version}-#{@platform}-#{@arch}"
 			else
 				"node-webkit-v#{@version}-#{@platform}-#{@arch}"
 		else 

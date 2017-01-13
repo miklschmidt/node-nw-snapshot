@@ -13,7 +13,7 @@ path         = require 'path'
 ###
 
 binFolder    = 'test_bin'
-nwVersion    = '0.12.0'
+nwVersion    = '0.19.5'
 
 ###
 # Tests
@@ -154,7 +154,7 @@ describe "NodeWebkitDownloader", () ->
 				throw err
 			return promise
 
-		it 'should be able to extract osx-ia32 archive', (done) -> testExtraction('osx', 'ia32').always done
+		it 'should be able to extract osx-x64 archive', (done) -> testExtraction('osx', 'x64').always done
 		it 'should be able to extract win-ia32 archive', (done) -> testExtraction('win', 'ia32').always done
 
 		# Conditional test.. probably not the best way to handle this..
@@ -182,7 +182,7 @@ describe "NodeWebkitDownloader", () ->
 			return promise
 
 
-		it 'should be able to ensure that a specified version is available for osx-ia32', (done) -> testEnsure('osx', 'ia32').always () -> done()
+		it 'should be able to ensure that a specified version is available for osx-ia32', (done) -> testEnsure('osx', 'x64').always () -> done()
 		it 'should be able to ensure that a specified version is available for win-ia32', (done) -> testEnsure('win', 'ia32').always () -> done()
 		# Conditional test.. probably not the best way to handle this..
 		unless process.platform.match(/^win/)

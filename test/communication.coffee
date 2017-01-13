@@ -18,7 +18,7 @@ fixtures =
 	snapshotSource: null
 	iterations: 1
 
-nwVersion = '0.12.0'
+nwVersion = '0.19.5'
 
 ###
 # Tests
