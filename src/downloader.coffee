@@ -60,7 +60,10 @@ module.exports = class NodeWebkitDownloader
 		else if major is 0 and minor < 12
 			return "#{Config.newDownloadURL}/v#{@version}/node-webkit-v#{@version}-#{@platform}-#{@arch}.#{extension}"
 		else
-			return "#{Config.nwjsDownloadUrl}/v#{@version}/nwjs-sdk-v#{@version}-#{@platform}-#{@arch}.#{extension}"
+			if major is 0 and minor < 13
+				return "#{Config.nwjsDownloadUrl}/v#{@version}/nwjs-v#{@version}-#{@platform}-#{@arch}.#{extension}"
+			else
+				return "#{Config.nwjsDownloadUrl}/v#{@version}/nwjs-sdk-v#{@version}-#{@platform}-#{@arch}.#{extension}"
 
 
 	###

@@ -1,10 +1,10 @@
-Latest version: 0.2.1
+Latest version: 0.3.1
 
 ## NOTE: Upgrading from 0.1.x to 0.2.x
 The default ports have changed to make room for x64 on osx and windows. See [defaults](#defaults)
 
-## New in 0.2.2
-Now supports nwjs (>=0.12.0)
+## New in 0.3.1
+Support tested up to nwjs v0.25.3
 
 ## Introduction
 
