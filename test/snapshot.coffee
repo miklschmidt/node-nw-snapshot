@@ -8,6 +8,8 @@ rimraf     = require 'rimraf'
 fs         = require 'fs'
 path       = require 'path'
 
+{nwVersion}    = require './config'
+
 ###
 # Fixtures
 ###
@@ -48,7 +50,7 @@ describe "Snapshot", () ->
 			failCalled = false
 			doneCalled = false
 			Snapshot.config
-				nwVersion: '0.19.5'
+				nwVersion: nwVersion
 				appSourceNw: fixtures.app
 				snapshotSource: fixtures.snapshotSource
 				iterations: fixtures.iterations
@@ -66,7 +68,7 @@ describe "Snapshot", () ->
 
 	describe "#prepare", () ->
 
-		it 'should resolve the deferred', (done) ->
+		it 'should resolve the deferred', () ->
 			this.timeout(60000)
 			doneCalled = false
 			failCalled = false
@@ -79,7 +81,6 @@ describe "Snapshot", () ->
 			.always () ->
 				failCalled.should.be.false
 				doneCalled.should.be.true
-				done()
 
 		it 'should make test directory, and extract the source', () ->
 			Snapshot.testdir.should.exist
@@ -100,12 +101,8 @@ describe "Snapshot", () ->
 			fs.existsSync(Snapshot.nwPath).should.be.true
 
 	describe "#compile", () ->
-		it 'should resolve the deferred', (done) ->
+		it 'should resolve the deferred', () ->
 			Snapshot.compile()
-			.fail (err) ->
-				throw err
-			.always () ->
-				done()
 		
 		it 'should generate a test id', () ->
 			Snapshot.id.should.exist
@@ -197,8 +194,8 @@ describe "Snapshot", () ->
 				# Put the original timeout back
 				Config.timeout = oldTimeout
 				Snapshot.process.should.exist
-
 				done()
+			return null
 
 
 	describe "#run", () ->
@@ -227,8 +224,8 @@ describe "Snapshot", () ->
 
 				# Put the original timeout back
 				Config.timeout = oldTimeout
-
 				done()
+			return null
 
 		it "should reject the deferred when not prepared/state mismatch", (done) ->
 			doneCalled = false
@@ -244,9 +241,10 @@ describe "Snapshot", () ->
 			.always () ->	
 				doneCalled.should.be.false
 				failCalled.should.be.true
-				done()
+				done();
+			return null
 
-		it "should resolve with snapshot when succesful", (done) ->
+		it "should resolve with snapshot when succesful", () ->
 			doneCalled = false
 			failCalled = false
 
@@ -272,5 +270,3 @@ describe "Snapshot", () ->
 
 				# Put the original launch function back
 				Snapshot.launch = oldLaunch
-
-				done()

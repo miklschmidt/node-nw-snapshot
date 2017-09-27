@@ -13,7 +13,7 @@ path         = require 'path'
 ###
 
 binFolder    = 'test_bin'
-nwVersion    = '0.19.5'
+{nwVersion}    = require './config'
 
 ###
 # Tests
@@ -90,6 +90,7 @@ describe "NodeWebkitDownloader", () ->
 				should.exist body
 				response.statusCode.should.equal 200
 				done()
+			return null
 			
 	describe "#download", () ->
 		it 'should resolve the promise when downloaded', (done) ->
@@ -106,6 +107,7 @@ describe "NodeWebkitDownloader", () ->
 				doneCalled.should.be.true
 				failCalled.should.be.false
 				done()
+			return null
 
 		it 'should reject the promise when download failed', (done) ->
 			downloader = new Downloader '9999.99999.9999' # useless version number to force a fail.
@@ -121,6 +123,7 @@ describe "NodeWebkitDownloader", () ->
 				# Remove the bogus directory created with the crazy version number
 				rimraf downloader.getLocalPath(), (err) ->
 					done()
+			return null
 
 
 		it 'should resolve the promise even if the download already exists', (done) ->
@@ -136,6 +139,7 @@ describe "NodeWebkitDownloader", () ->
 				doneCalled.should.be.true
 				failCalled.should.be.false
 				done()
+			return null
 
 	describe "#extract", () ->
 		this.timeout(600000)
@@ -154,13 +158,13 @@ describe "NodeWebkitDownloader", () ->
 				throw err
 			return promise
 
-		it 'should be able to extract osx-x64 archive', (done) -> testExtraction('osx', 'x64').always done
-		it 'should be able to extract win-ia32 archive', (done) -> testExtraction('win', 'ia32').always done
+		it 'should be able to extract osx-x64 archive', () -> testExtraction('osx', 'x64')
+		it 'should be able to extract win-ia32 archive', () -> testExtraction('win', 'ia32')
 
 		# Conditional test.. probably not the best way to handle this..
 		unless process.platform.match(/^win/)
-			it 'should be able to extract linux-ia32 archive', (done) -> testExtraction('linux', 'ia32').always done
-			it 'should be able to extract linux-x64 archive', (done) -> testExtraction('linux', 'x64').always done
+			it 'should be able to extract linux-ia32 archive', () -> testExtraction('linux', 'ia32')
+			it 'should be able to extract linux-x64 archive', () -> testExtraction('linux', 'x64')
 
 	describe "#ensure", () ->
 
@@ -182,16 +186,16 @@ describe "NodeWebkitDownloader", () ->
 			return promise
 
 
-		it 'should be able to ensure that a specified version is available for osx-ia32', (done) -> testEnsure('osx', 'x64').always () -> done()
-		it 'should be able to ensure that a specified version is available for win-ia32', (done) -> testEnsure('win', 'ia32').always () -> done()
+		it 'should be able to ensure that a specified version is available for osx-ia32', () -> testEnsure('osx', 'x64')
+		it 'should be able to ensure that a specified version is available for win-ia32', () -> testEnsure('win', 'ia32')
 		# Conditional test.. probably not the best way to handle this..
 		unless process.platform.match(/^win/)
-			it 'should be able to ensure that a specified version is available for linux-ia32', (done) -> testEnsure('linux', 'ia32').always () -> done()
-			it 'should be able to ensure that a specified version is available for linux-x64', (done) -> testEnsure('linux', 'x64').always () -> done()
+			it 'should be able to ensure that a specified version is available for linux-ia32', () -> testEnsure('linux', 'ia32')
+			it 'should be able to ensure that a specified version is available for linux-x64', () -> testEnsure('linux', 'x64')
 
 
 	describe "#cleanVersionDirectoryForPlatform", () ->
-		it 'should delete the directory', (done) ->
+		it 'should delete the directory', () ->
 			downloader = new Downloader nwVersion
 			downloader.binFolder = binFolder
 			doneCalled = false
@@ -209,5 +213,4 @@ describe "NodeWebkitDownloader", () ->
 				doneCalled.should.be.true
 				failCalled.should.be.false
 				fs.existsSync(downloader.getLocalPath()).should.be.false
-				done()
 

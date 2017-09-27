@@ -1,8 +1,7 @@
 {
   "name": "nw-snapshot",
   "version": "0.3.1",
-  "description":
-    "Tools for compiling and testing v8 snapshots of node-webkit applications",
+  "description": "Tools for compiling and testing v8 snapshots of node-webkit applications",
   "main": "index",
   "keywords": [
     "node-webkit",
@@ -43,6 +42,10 @@
     "escape-regexp": "0.0.1",
     "express": "~3.4.8",
     "glob": "^3.2.9",
+    "gulp": "^3.9.1",
+    "gulp-coffee": "^2.3.4",
+    "gulp-mocha": "^3.0.1",
+    "gulp-util": "^3.0.8",
     "jquery-deferred": "~0.3.0",
     "minimist": "^1.1.0",
     "mkdirp": "^0.5.1",
@@ -51,11 +54,8 @@
     "tar": "^4.0.1"
   },
   "devDependencies": {
-    "gulp-coffee": "^1.4.1",
-    "gulp": "^3.5.2",
     "coffee-script": "~1.7.0",
     "mocha": "~1.17.1",
-    "should": "~3.1.2",
-    "gulp-mocha": "^0.4.1"
+    "should": "~3.1.2"
   }
 }

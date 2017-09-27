@@ -7,6 +7,8 @@ should                   = require 'should'
 fs                       = require 'fs'
 path                     = require 'path'
 
+{nwVersion}    = require './config'
+
 ###
 # Fixtures
 ###
@@ -28,7 +30,7 @@ describe "nwsnapshot binary", () ->
 		fixtures.app = fs.readFileSync (path.join __dirname, 'fixtures', 'app.zip')
 		fixtures.snapshotSource = fs.readFileSync (path.join __dirname, 'fixtures', 'snapshot.js')
 		Server.start()
-		client = new Client '0.19.5', fixtures.app, fixtures.snapshotSource
+		client = new Client nwVersion, fixtures.app, fixtures.snapshotSource
 		client.connect "tcp://127.0.0.1:#{Config.sockPort}", done
 
 	after () ->
