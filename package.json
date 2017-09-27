@@ -37,17 +37,17 @@
   },
   "dependencies": {
     "axon": "~1.0.0",
-    "jquery-deferred": "~0.3.0",
-    "mkdirp": "~0.3.5",
-    "rimraf": "~2.2.8",
     "debug": "~0.7.4",
+    "decompress-zip": "^0.3.0",
     "escape-regexp": "0.0.1",
-    "request": "~2.33.0",
-    "decompress-zip": "0.0.4",
-    "tar": "~0.1.19",
     "express": "~3.4.8",
     "glob": "^3.2.9",
-    "minimist": "^1.1.0"
+    "jquery-deferred": "~0.3.0",
+    "minimist": "^1.1.0",
+    "mkdirp": "^0.5.1",
+    "request": "~2.33.0",
+    "rimraf": "^2.6.2",
+    "tar": "^4.0.1"
   },
   "devDependencies": {
     "gulp-coffee": "^1.4.1",
