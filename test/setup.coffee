@@ -1,3 +1,3 @@
 require('./downloader.coffee')
-require('./snapshot.coffee')
-require('./communication.coffee')
+# require('./snapshot.coffee')
+# require('./communication.coffee')

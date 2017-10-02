@@ -31,7 +31,7 @@ module.exports = class NodeWebkitDownloader
 	# @return {NodeWebkitDownloader}
 	# @api private
 	###
-	constructor: (@version, @platform = Config.platform, @arch = Config.arch) ->
+	constructor: (@version, @platform = Config.platform, @arch = Config.arch, @minimalBuild = false) ->
 		throw new Error "No version specified" unless @version
 		unless @platform in ['win', 'osx', 'linux']
 			throw new Error "Platform must be one of 'osx', 'linux' or 'win'"
@@ -63,7 +63,10 @@ module.exports = class NodeWebkitDownloader
 			if major is 0 and minor < 13
 				return "#{Config.nwjsDownloadUrl}/v#{@version}/nwjs-v#{@version}-#{@platform}-#{@arch}.#{extension}"
 			else
-				return "#{Config.nwjsDownloadUrl}/v#{@version}/nwjs-sdk-v#{@version}-#{@platform}-#{@arch}.#{extension}"
+				if @minimalBuild
+					return "#{Config.nwjsDownloadUrl}/v#{@version}/nwjs-v#{@version}-#{@platform}-#{@arch}.#{extension}"
+				else
+					return "#{Config.nwjsDownloadUrl}/v#{@version}/nwjs-sdk-v#{@version}-#{@platform}-#{@arch}.#{extension}"
 
 
 	###
@@ -74,7 +77,10 @@ module.exports = class NodeWebkitDownloader
 	# @api public
 	###
 	getLocalPath: () ->
-		path.join __dirname, '..', @binFolder, @version, "#{@platform}-#{@arch}"
+		if @minimalBuild
+			path.join __dirname, '..', @binFolder, @version, "#{@platform}-#{@arch}-minimal"
+		else
+			path.join __dirname, '..', @binFolder, @version, "#{@platform}-#{@arch}"
 
 	###
 	# Returns the subfolder of the zip where the files are located, if it exists.
@@ -88,7 +94,10 @@ module.exports = class NodeWebkitDownloader
 		{major, minor} = @parseVersion()
 		if @platform is 'linux' or (major is 0 and minor > 9) or (major > 0) 
 			if @isNwjs()
-				"nwjs-sdk-v#{@version}-#{@platform}-#{@arch}"
+				if @minimalBuild
+					return "nwjs-v#{@version}-#{@platform}-#{@arch}"
+				else
+					return "nwjs-sdk-v#{@version}-#{@platform}-#{@arch}"
 			else
 				"node-webkit-v#{@version}-#{@platform}-#{@arch}"
 		else 
@@ -267,7 +276,10 @@ module.exports = class NodeWebkitDownloader
 	# @api public
 	###	
 	verifyBinaries: () ->
-		fs.existsSync(@getSnapshotBin()) and fs.existsSync(@getNwBin())
+		if @minimalBuild
+			return fs.existsSync(@getNwBin())
+		else
+			return fs.existsSync(@getSnapshotBin()) and fs.existsSync(@getNwBin())
 
 	###
 	# Ensures that the node-webkit distribution is available for use.
@@ -280,7 +292,10 @@ module.exports = class NodeWebkitDownloader
 		@versionExists = fs.existsSync(@getLocalPath())
 		# Check if the version exists and verify that the binaries are present.
 		if @versionExists and @verifyBinaries()
-			ensureDeferred.resolveWith @, [@getSnapshotBin(), @getNwBin()]
+			if @minimalBuild
+				ensureDeferred.resolveWith @, [null, @getNwBin()]
+			else
+				ensureDeferred.resolveWith @, [@getSnapshotBin(), @getNwBin()]
 		else
 			# Always delete the old directory, there might be something left over
 			# from a bad extraction or something. Basically be sure to start from scratch.
@@ -292,7 +307,10 @@ module.exports = class NodeWebkitDownloader
 			# Check if the binaries exist and resolve/reject
 			.done () ->
 				if @verifyBinaries()
-					ensureDeferred.resolveWith @, [@getSnapshotBin(), @getNwBin()]
+					if @minimalBuild
+						ensureDeferred.resolveWith @, [null, @getNwBin()]
+					else
+						ensureDeferred.resolveWith @, [@getSnapshotBin(), @getNwBin()]
 				else
 					ensureDeferred.rejectWith @, [
 						new Error("The expected binaries couldn't be 

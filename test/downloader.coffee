@@ -91,6 +91,16 @@ describe "NodeWebkitDownloader", () ->
 				response.statusCode.should.equal 200
 				done()
 			return null
+
+		it 'should return a valid minimal download url', (done) ->
+			downloader = new Downloader nwVersion, undefined, undefined, true
+			url = downloader.getDownloadURL()
+			require('request').head url, (err, response, body) ->
+				should.not.exist err
+				should.exist body
+				response.statusCode.should.equal 200
+				done()
+			return null
 			
 	describe "#download", () ->
 		it 'should resolve the promise when downloaded', (done) ->
@@ -108,6 +118,12 @@ describe "NodeWebkitDownloader", () ->
 				failCalled.should.be.false
 				done()
 			return null
+
+		it 'should be able to download minimal distribution', () ->
+			this.timeout(60000)
+			downloader = new Downloader nwVersion, undefined, undefined, true
+			downloader.binFolder = binFolder
+			downloader.download()
 
 		it 'should reject the promise when download failed', (done) ->
 			downloader = new Downloader '9999.99999.9999' # useless version number to force a fail.
@@ -142,7 +158,7 @@ describe "NodeWebkitDownloader", () ->
 			return null
 
 	describe "#extract", () ->
-		this.timeout(600000)
+		this.timeout(60000)
 
 		# NOTE: This is dependent on the #download tests passing
 		# should probably fix this and supply archives for proper testing.
@@ -150,7 +166,7 @@ describe "NodeWebkitDownloader", () ->
 			downloader = new Downloader nwVersion, platform, arch
 			downloader.binFolder = binFolder
 
-			promise = downloader.download().then(downloader.extract)
+			promise = downloader.download().then((destinationFile) => return downloader.extract(destinationFile))
 			.done () ->
 				downloader.verifyBinaries().should.be.true
 			.fail (err) ->
@@ -167,23 +183,12 @@ describe "NodeWebkitDownloader", () ->
 			it 'should be able to extract linux-x64 archive', () -> testExtraction('linux', 'x64')
 
 	describe "#ensure", () ->
-
+		this.timeout(60000)
 		testEnsure = (platform, arch) ->
 			downloader = new Downloader nwVersion, platform, arch
 			downloader.binFolder = binFolder
-			doneCalled = false
-			failCalled = false
 
-			promise = downloader.ensure()
-			.done () ->
-				doneCalled = true
-			.fail (err) ->
-				failCalled = true
-				throw err
-			.always () ->
-				doneCalled.should.be.true
-				failCalled.should.be.false
-			return promise
+			return downloader.ensure()
 
 
 		it 'should be able to ensure that a specified version is available for osx-ia32', () -> testEnsure('osx', 'x64')
@@ -192,6 +197,11 @@ describe "NodeWebkitDownloader", () ->
 		unless process.platform.match(/^win/)
 			it 'should be able to ensure that a specified version is available for linux-ia32', () -> testEnsure('linux', 'ia32')
 			it 'should be able to ensure that a specified version is available for linux-x64', () -> testEnsure('linux', 'x64')
+
+		it 'should be able to ensure minimal distribution', () ->
+			downloader = new Downloader nwVersion, undefined, undefined, true
+			downloader.binFolder = binFolder
+			downloader.ensure()
 
 
 	describe "#cleanVersionDirectoryForPlatform", () ->
